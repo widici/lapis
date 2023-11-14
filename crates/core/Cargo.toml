@@ -1,0 +1,16 @@
+[package]
+name = "core"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+env_logger = "0.10.0"
+log = "0.4.20"
+eval = { path = "../eval" }
+resolver = { path = "../resolver" }
+lexer = { path = "../lexer" }
+parser = { path = "../parser" }
+error = { path = "../error" }
+miette = { version = "5.10.0", features = ["fancy"] }

@@ -1,0 +1,7 @@
+fn f(n) {
+    var x = 10
+    return x + n
+}
+
+var y = 5
+y += f(2)

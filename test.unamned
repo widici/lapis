@@ -1,7 +1,4 @@
-fn f(n) {
-    var x = 10
-    return x + n
+if false {
+} elif true {
+} else {
 }
-
-var y = 5
-y += f(2)

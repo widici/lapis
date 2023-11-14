@@ -52,4 +52,9 @@ pub enum StatementEnum {
     Return {
         expr: Expression
     },
+    If {
+        if_branch: (Expression, Statement),
+        elif_branches: Vec<(Expression, Statement)>,
+        else_branch: Option<Statement>,
+    }
 }

@@ -47,7 +47,7 @@ impl Parser {
     }
 
     fn parse_stmt(&mut self) -> Statement {
-        println!("Current token: {:?}", self.current_token);
+        //println!("Parsing stmt on: {:?}", self.current_token);
         self.add_start(self.current_token.span.start);
         let stmt = match &self.current_token.tt {
             TokenType::Var => self.parse_var_decl(),
@@ -66,6 +66,7 @@ impl Parser {
                 StatementEnum::Return { expr: self.parse_expr() }
             }
             TokenType::Fn => self.parse_fn_decl(),
+            TokenType::If => self.parse_if(),
             _ => {
                 StatementEnum::Expression(self.parse_expr())
             }
@@ -159,6 +160,7 @@ impl Parser {
     }
 
     fn parse_block(&mut self) -> StatementEnum {
+        assert_eq!(self.current_token.tt, TokenType::LCurly);
         self.advance(); // Consumes the lcurly
         StatementEnum::Block { stmts: self.parse_inner(true) }
     }
@@ -193,6 +195,37 @@ impl Parser {
         let block = self.construct_stmt(block);
         //info!("{:?}", block);
         StatementEnum::FnDeclaration { ident, params, block }
+    }
+
+    fn parse_if(&mut self) -> StatementEnum {
+        let if_branch = self.parse_cond_branch();
+
+        let mut elif_branches: Vec<(Expression, Statement)> = Vec::new();
+        while self.peek_token().unwrap().tt == TokenType::Elif {
+            self.advance(); // Consumes the rcurly
+            elif_branches.push(self.parse_cond_branch());
+        }
+
+        let mut else_branch: Option<Statement> = None;
+        if self.peek_token().unwrap().tt == TokenType::Else {
+            self.advance(); // Consumes the rcurly
+            self.advance(); // Consumes the else-kw
+            self.add_start(self.current_token.span.start);
+            let block = self.parse_block();
+            else_branch = Some(self.construct_stmt(block));
+        }
+        StatementEnum::If { if_branch, elif_branches, else_branch }
+    }
+
+    fn parse_cond_branch(&mut self) -> (Expression, Statement) {
+        self.advance();
+        let condition = self.parse_expr();
+        self.advance();
+        self.add_start(self.current_token.span.start);
+        let block = self.parse_block();
+        let block = self.construct_stmt(block);
+        //self.advance();
+        (condition, block)
     }
 
     fn parse_call(&mut self) -> Expression {

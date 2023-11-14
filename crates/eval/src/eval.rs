@@ -159,6 +159,7 @@ impl Visitor for Evaluator {
                 self.env.declare(ident, value)
             },
             StatementEnum::Return { expr } => return Err(self.visit_expr(expr)),
+            StatementEnum::If { if_branch, elif_branches, else_branch } => unimplemented!(),
         }
         Ok(())
     }

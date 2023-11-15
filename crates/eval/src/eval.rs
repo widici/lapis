@@ -18,14 +18,14 @@ impl Evaluator {
         Evaluator { resolver, env }
     }
 
-    pub fn evaluate(&mut self, stmts: Vec<Statement>) -> Result<(), StackType> {
+    pub fn evaluate(&mut self, stmts: Vec<Statement>) -> Result<(), StatementErr> {
         for stmt in stmts {
             self.visit_stmt(stmt)?;
         }
         Ok(())
     }
 
-    pub(crate) fn execute_block(&mut self, stmts: Vec<Statement>) -> Result<(), StackType> {
+    pub(crate) fn execute_block(&mut self, stmts: Vec<Statement>) -> Result<(), StatementErr> {
         self.env.new_node();
         self.resolver.new_scope();
         let result = self.evaluate(stmts);
@@ -80,7 +80,7 @@ impl Evaluator {
         })
     }
 
-    fn execute_cond_branch(&mut self, condition: Expression, block: Statement) -> Option<Result<(), StackType>>{
+    fn execute_cond_branch(&mut self, condition: Expression, block: Statement) -> Option<Result<(), StatementErr>>{
         let evaled = self.visit_expr(condition);
         match evaled {
             StackType::Literal(Bool(boolean)) => {
@@ -94,9 +94,15 @@ impl Evaluator {
     }
 }
 
+pub enum StatementErr {
+    Return(StackType),
+    Continue,
+    Break,
+}
+
 impl Visitor for Evaluator {
     type E = StackType;
-    type S = Result<(), StackType>;
+    type S = Result<(), StatementErr>;
 
     fn visit_expr(&mut self, expr: Expression) -> Self::E {
         //println!("{:?}, {:?}-{:?}", expr.expr, expr.start, expr.end);
@@ -173,7 +179,7 @@ impl Visitor for Evaluator {
                 let value = StackType::Function { params, block: block };
                 self.env.declare(ident, value)
             },
-            StatementEnum::Return { expr } => return Err(self.visit_expr(expr)),
+            StatementEnum::Return { expr } => return Err(StatementErr::Return(self.visit_expr(expr))),
             StatementEnum::If { if_branch, elif_branches, else_branch } => {
                 if let Some(result) = self.execute_cond_branch(if_branch.0, if_branch.1) {
                     return result
@@ -193,10 +199,18 @@ impl Visitor for Evaluator {
             StatementEnum::While { condition, block } => {
                 while self.visit_expr(condition.clone()) == StackType::Literal(Bool(true)) {
                     if let StatementEnum::Block { stmts } = *block.stmt.clone() {
-                        self.execute_block(stmts)?;
+                        if let Err(e) = self.execute_block(stmts) {
+                            match e {
+                                StatementErr::Break => break,
+                                StatementErr::Continue => continue,
+                                e => return Err(e)
+                            }
+                        }
                     }
                 }
-            }
+            },
+            StatementEnum::Break => return Err(StatementErr::Break),
+            StatementEnum::Continue => return Err(StatementErr::Continue),
         }
         Ok(())
     }

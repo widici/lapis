@@ -1,7 +1,7 @@
 use ast::{Statement, StatementEnum};
 use lexer::token::Literal;
 use crate::env::StackType;
-use crate::eval::Evaluator;
+use crate::eval::{Evaluator, StatementErr};
 
 pub trait Callable {
     fn arity(&self) -> usize;
@@ -33,7 +33,10 @@ impl Callable for Function {
 
         return match fn_return {
             Ok(()) => StackType::Void,
-            Err(stack_type) => stack_type,
+            Err(e) => match e {
+                StatementErr::Return(stack_type) => stack_type,
+                _ => unreachable!()
+            }
         }
     }
 }

@@ -118,6 +118,8 @@ impl Lexer {
             "fn" => TokenType::Fn,
             "return" => TokenType::Return,
             "while" => TokenType::While,
+            "break" => TokenType::Break,
+            "continue" => TokenType::Continue,
             "if" => TokenType::If,
             "elif" => TokenType::Elif,
             "else" => TokenType::Else,

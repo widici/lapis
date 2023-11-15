@@ -60,5 +60,7 @@ pub enum StatementEnum {
     While {
         condition: Expression,
         block: Statement,
-    }
+    },
+    Continue,
+    Break,
 }

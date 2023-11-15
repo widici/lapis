@@ -31,6 +31,8 @@ pub enum TokenType {
     Fn,
     Return,
     While,
+    Continue,
+    Break,
     If,
     Elif,
     Else,

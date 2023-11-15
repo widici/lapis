@@ -68,6 +68,8 @@ impl Parser {
             TokenType::Fn => self.parse_fn_decl(),
             TokenType::If => self.parse_if(),
             TokenType::While => self.parse_while(),
+            TokenType::Break => StatementEnum::Break,
+            TokenType::Continue => StatementEnum::Continue,
             _ => {
                 StatementEnum::Expression(self.parse_expr())
             }

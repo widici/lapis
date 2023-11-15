@@ -26,6 +26,8 @@ impl Evaluator {
     }
 
     pub(crate) fn execute_block(&mut self, stmts: Vec<Statement>) -> Result<(), StackType> {
+        self.env.new_node();
+        self.resolver.new_scope();
         let result = self.evaluate(stmts);
         self.resolver.end_scope();
         self.env.drop();
@@ -185,6 +187,13 @@ impl Visitor for Evaluator {
                     match *block.stmt {
                         StatementEnum::Block { stmts } => return self.execute_block(stmts),
                         _ => panic!("Expected block")
+                    }
+                }
+            },
+            StatementEnum::While { condition, block } => {
+                while self.visit_expr(condition.clone()) == StackType::Literal(Bool(true)) {
+                    if let StatementEnum::Block { stmts } = *block.stmt.clone() {
+                        self.execute_block(stmts)?;
                     }
                 }
             }

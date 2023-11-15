@@ -22,8 +22,6 @@ impl Callable for Function {
         if self.arity() != params.len() {
             unimplemented!()
         }
-        evaluator.env.new_node();
-        evaluator.resolver.new_scope();
         
         for (ident, value) in self.params.clone().into_iter().zip(params.into_iter()) {
             evaluator.env.declare(ident, value)

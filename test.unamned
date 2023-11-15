@@ -1,5 +1,5 @@
-if true {
-    var x = 10
-} else {
-    var z = 10
+var x = 0
+
+while x < 10 {
+    x += 1
 }

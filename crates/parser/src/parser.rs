@@ -67,6 +67,7 @@ impl Parser {
             }
             TokenType::Fn => self.parse_fn_decl(),
             TokenType::If => self.parse_if(),
+            TokenType::While => self.parse_while(),
             _ => {
                 StatementEnum::Expression(self.parse_expr())
             }
@@ -226,6 +227,16 @@ impl Parser {
         let block = self.construct_stmt(block);
         //self.advance();
         (condition, block)
+    }
+
+    fn parse_while(&mut self) -> StatementEnum {
+        self.advance(); // Consumes the while-kw
+        let condition = self.parse_expr();
+        self.advance();
+        self.add_start(self.current_token.span.start);
+        let block = self.parse_block();
+        let block = self.construct_stmt(block);
+        StatementEnum::While { condition, block }
     }
 
     fn parse_call(&mut self) -> Expression {

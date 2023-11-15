@@ -30,6 +30,7 @@ pub enum TokenType {
     Var,
     Fn,
     Return,
+    While,
     If,
     Elif,
     Else,
@@ -67,7 +68,19 @@ impl Neg for Literal {
 
 impl PartialEq for Literal {
     fn eq(&self, other: &Self) -> bool {
-        discriminant(self) == discriminant(other)
+        match (&self.get_bool(), &other.get_bool()) {
+            (Some(self_bool), Some(other_bool)) => self_bool == other_bool,
+            _ => discriminant(self) == discriminant(other)
+        }
+    }
+}
+
+impl Literal {
+    fn get_bool(&self) -> Option<bool> {
+        match &self {
+            Literal::Bool(boolean) => Some(boolean.clone()),
+            _ => None,
+        }
     }
 }
 

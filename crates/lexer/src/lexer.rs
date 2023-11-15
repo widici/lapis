@@ -117,6 +117,7 @@ impl Lexer {
             "var" => TokenType::Var,
             "fn" => TokenType::Fn,
             "return" => TokenType::Return,
+            "while" => TokenType::While,
             "if" => TokenType::If,
             "elif" => TokenType::Elif,
             "else" => TokenType::Else,

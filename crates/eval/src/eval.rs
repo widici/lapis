@@ -77,6 +77,19 @@ impl Evaluator {
             _ => return None,
         })
     }
+
+    fn execute_cond_branch(&mut self, condition: Expression, block: Statement) -> Option<Result<(), StackType>>{
+        let evaled = self.visit_expr(condition);
+        match evaled {
+            StackType::Literal(Bool(boolean)) => {
+                if boolean {
+                    return Some(self.visit_stmt(block))
+                }
+            },
+            _ => unimplemented!()
+        }
+        None
+    }
 }
 
 impl Visitor for Evaluator {
@@ -159,7 +172,22 @@ impl Visitor for Evaluator {
                 self.env.declare(ident, value)
             },
             StatementEnum::Return { expr } => return Err(self.visit_expr(expr)),
-            StatementEnum::If { if_branch, elif_branches, else_branch } => unimplemented!(),
+            StatementEnum::If { if_branch, elif_branches, else_branch } => {
+                if let Some(result) = self.execute_cond_branch(if_branch.0, if_branch.1) {
+                    return result
+                }
+                for branch in elif_branches {
+                    if let Some(result) = self.execute_cond_branch(branch.0, branch.1) {
+                        return result
+                    }
+                }
+                if let Some(block) = else_branch {
+                    match *block.stmt {
+                        StatementEnum::Block { stmts } => return self.execute_block(stmts),
+                        _ => panic!("Expected block")
+                    }
+                }
+            }
         }
         Ok(())
     }

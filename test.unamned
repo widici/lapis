@@ -1,4 +1,5 @@
-if false {
-} elif true {
+if true {
+    var x = 10
 } else {
+    var z = 10
 }

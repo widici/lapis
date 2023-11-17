@@ -56,18 +56,6 @@ pub enum Literal {
     Str(String),
 }
 
-impl Neg for Literal {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        match self {
-            Self::Int(int) => Self::Int(-int),
-            Self::Float(float) => Self::Float(-float),
-            _ => unreachable!()
-        }
-    }
-}
-
 impl PartialEq for Literal {
     fn eq(&self, other: &Self) -> bool {
         match (&self.get_bool(), &other.get_bool()) {
@@ -88,6 +76,9 @@ impl Literal {
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum Op {
+    Not,
+    //Neg,
+
     // Arithmetic
     Add,
     Sub,
@@ -127,6 +118,7 @@ impl Op {
             Op::Add | Op::Sub => 4, // Term
             Op::Mul | Op::Div | Op::Rem => 5, // Factor
             Op::Pow => 6, // Caret
+            Op::Not  => 7,
             _ => 3,
         }
     }

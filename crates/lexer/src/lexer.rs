@@ -1,6 +1,6 @@
 use crate::token::{Token, TokenType};
 use crate::token::Literal::{Float, Int, Bool, Str};
-use crate::token::Op::{Div, Sub, Mul, Add, Pow, Rem, Eq, EqEq, Ne, Gt, Lt, Ge, Le, And, Or};
+use crate::token::Op::{Div, Sub, Mul, Add, Pow, Rem, Eq, EqEq, Ne, Gt, Lt, Ge, Le, And, Or, Not};
 use error::span::Span;
 
 pub struct Lexer {
@@ -64,8 +64,8 @@ impl Lexer {
                 '=' => {
                     self.advance();
                     TokenType::Op(Ne)
-                }
-                _ => unimplemented!()
+                },
+                _ => TokenType::Op(Not)
             }
             '+' => TokenType::Op(Add),
             '-' => TokenType::Op(Sub),

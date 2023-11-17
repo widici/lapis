@@ -1,5 +1,4 @@
 use ast::{Statement, StatementEnum};
-use lexer::token::Literal;
 use crate::env::StackType;
 use crate::eval::{Evaluator, StatementErr};
 
@@ -32,7 +31,7 @@ impl Callable for Function {
         } else { unreachable!() };
 
         return match fn_return {
-            Ok(()) => StackType::Void,
+            Ok(()) => StackType::Undefined,
             Err(e) => match e {
                 StatementErr::Return(stack_type) => stack_type,
                 _ => unreachable!()

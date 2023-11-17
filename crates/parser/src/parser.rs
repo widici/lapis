@@ -270,17 +270,16 @@ impl Parser {
                 let expr_result = self.parse_expr();
                 return expr_result
             },
-            TokenType::Op(Op::Sub) => {
-                self.add_start(self.current_token.span.start);
-                self.advance(); // Consume the sub
-                match *self.parse_operand().expr {
-                    ExpressionEnum::Literal(literal) => match literal {
-                        Int(_) | Float(_) => self.construct_expr(ExpressionEnum::Literal(-literal)),
-                        _ => unimplemented!()
-                    },
-                    _ => unimplemented!(),
+            TokenType::Op(op) => match op {
+                Op::Sub | Op::Not => {
+                    self.add_start(self.current_token.span.start);
+                    self.advance(); // Consume the sub/not
+                    let expr = self.parse_operand();
+                    self.construct_expr(ExpressionEnum::UnaryOp { operator: op.clone(), expr })
                 }
-            },
+                _ => unimplemented!()
+            }    
+
             TokenType::Ident(name) => {
                 match self.peek_token() {
                     Some(Token { tt: TokenType::LParen, .. }) => return self.parse_call(),

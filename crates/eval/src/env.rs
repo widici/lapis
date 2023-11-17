@@ -2,7 +2,6 @@ use log::info;
 use std::collections::{HashMap, hash_map::Entry::{Vacant, Occupied}};
 use lexer::token::Literal;
 use ast::ast::Statement;
-use crate::callable::Function;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum StackType {
@@ -11,7 +10,7 @@ pub enum StackType {
          params: Vec<String>,
          block: Statement,
     },
-    Void,
+    Undefined,
 }
 
 pub struct Enviroment {

@@ -1,10 +1,10 @@
 use ast::{Expression, Statement, ExpressionEnum, StatementEnum};
 use crate::callable::{Function, Callable};
 use resolver::Resolver;
-use lexer::token::{Op, Literal::{Float, Int, Bool}};
+use lexer::token::{Op, Literal::{Float, Int, Bool, self}};
 use ast::Visitor;
 use crate::env::{StackType, Enviroment};
-use std::ops::{Add, Sub, Mul, Div, Rem};
+use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not};
 
 pub struct Evaluator {
     pub(crate) resolver: Resolver,
@@ -133,6 +133,14 @@ impl Visitor for Evaluator {
                     _ => unimplemented!()
                 }
             },
+            ExpressionEnum::UnaryOp { operator, expr } => {
+                let stack_type = self.visit_expr(expr);
+                return match operator {
+                    Op::Sub => -stack_type,
+                    Op::Not => !stack_type,
+                    _ => unreachable!(),
+                }
+            }
             ExpressionEnum::Var { ident } => {
                 self.env.get(ident).unwrap()
             },
@@ -232,5 +240,36 @@ impl Pow<f64> for f64 {
     type Output = f64;
     fn pow(self, rhs: f64) -> Self::Output {
         self.powf(rhs)
+    }
+}
+
+impl Neg for StackType {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        let result = match self {
+            Self::Literal(literal) => match literal {
+                Literal::Int(int) => Literal::Int(-int),
+                Literal::Float(float) => Literal::Float(-float),
+                _  => unreachable!(),
+            }
+            _ => unreachable!()
+        };
+        StackType::Literal(result)
+    }
+}
+
+impl Not for StackType {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        let result = match self {
+            Self::Literal(literal) => match literal {
+                Literal::Bool(boolean) => Literal::Bool(!boolean),
+                _ => unreachable!(),
+            },
+            _ => unreachable!()
+        };
+        StackType::Literal(result)
     }
 }

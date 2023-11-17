@@ -15,6 +15,10 @@ pub enum ExpressionEnum {
         operator: Op,
         right: Expression,
     },
+    UnaryOp {
+        operator: Op,
+        expr: Expression,
+    },
     Var {
         ident: String
     },

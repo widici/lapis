@@ -268,6 +268,8 @@ impl Parser {
             TokenType::LParen => {
                 self.advance(); // Consumes the lparen
                 let expr_result = self.parse_expr();
+                self.advance();
+                println!("AFTER_LPAREN: {:?}", self.current_token.tt);
                 return expr_result
             },
             TokenType::Op(op) => match op {

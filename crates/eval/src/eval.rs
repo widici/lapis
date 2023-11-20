@@ -1,7 +1,7 @@
 use ast::{Expression, Statement, ExpressionEnum, StatementEnum};
 use crate::callable::{Function, Callable};
 use resolver::Resolver;
-use lexer::token::{Op, Literal::{Float, Int, Bool, self}};
+use lexer::token::{Op, Literal::{Float, Int, Bool, Str, self}};
 use ast::Visitor;
 use crate::env::{StackType, Enviroment};
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not};
@@ -127,6 +127,11 @@ impl Visitor for Evaluator {
                     },
                     (StackType::Literal(Bool(left_bool)), StackType::Literal(Bool(right_bool))) => {
                         if let Some(bool) = Evaluator::perform_bool_op(left_bool, operator, right_bool) {
+                            StackType::Literal(Bool(bool))
+                        } else { unimplemented!() }
+                    },
+                    (StackType::Literal(Str(left_str)), StackType::Literal(Str(right_str))) => {
+                        if let Some(bool) = Evaluator::perform_eq_op(left_str, operator, right_str) {
                             StackType::Literal(Bool(bool))
                         } else { unimplemented!() }
                     }

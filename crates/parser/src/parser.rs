@@ -1,7 +1,7 @@
 use std::cmp::Ordering::Greater;
 use std::cmp::Ordering;
 use ast::{Expression, Statement, ExpressionEnum, StatementEnum};
-use lexer::token::{Op, TokenType, Literal::{Float, Int}, Token};
+use lexer::token::{Op, TokenType, Token};
 use error::span::Span;
 
 pub struct Parser {

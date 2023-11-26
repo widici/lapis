@@ -2,4 +2,9 @@
 members = ["crates/*"]
 default-members = ["crates/core"]
 
+[profile.release]
+debug = true
+debug-assertions = true
+opt-level = 1
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

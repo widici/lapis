@@ -148,7 +148,7 @@ impl Parser {
 
         let left = self.parse_expr();
         // x op= 10 -> x = x op 10
-        let expr = match operator {
+        let right = match operator {
             Op::Eq => left,
             _ => {
                 // Temporary solution
@@ -159,7 +159,7 @@ impl Parser {
                 self.construct_expr(expr)
             }
         };
-        StatementEnum::Expression(self.construct_expr(ExpressionEnum::Assignment { ident, expr }))
+        StatementEnum::Expression(self.construct_expr(ExpressionEnum::Assignment { ident, right }))
     }
 
     fn parse_block(&mut self) -> StatementEnum {
@@ -344,7 +344,7 @@ impl Parser {
     }
 
     fn construct_expr(&mut self, expr: ExpressionEnum) -> Expression {
-        Expression { expr: Box::new(expr), span: self.get_span() }
+        Expression { expr_enum: Box::new(expr), span: self.get_span() }
     }
 
     fn construct_stmt(&mut self, stmt: StatementEnum) -> Statement {

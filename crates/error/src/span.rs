@@ -1,7 +1,7 @@
-use miette::{SourceSpan, SourceCode, SourceOffset, NamedSource};
+use miette::{SourceSpan, SourceCode, SourceOffset};
 use std::fs::read_to_string;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Span {
     pub start: (usize, usize),
     pub end: (usize, usize),

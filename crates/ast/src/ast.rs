@@ -1,9 +1,11 @@
+use std::hash::{Hash, Hasher};
+
 use lexer::token::{Literal, Op};
 use error::span::Span;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Expression {
-    pub expr: Box<ExpressionEnum>,
+    pub expr_enum: Box<ExpressionEnum>,
     pub span: Span,
 }
 
@@ -24,7 +26,7 @@ pub enum ExpressionEnum {
     },
     Assignment {
         ident: String,
-        expr: Expression
+        right: Expression,
     },
     Call {
         ident: String,
@@ -68,3 +70,12 @@ pub enum StatementEnum {
     Continue,
     Break,
 }
+
+impl Hash for Expression {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let address = self as *const _ as usize;
+        address.hash(state)
+    }
+}
+
+impl Eq for Expression {}

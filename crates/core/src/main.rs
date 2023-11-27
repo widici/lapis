@@ -32,7 +32,10 @@ fn main() {
     let stmts = parser.parse();
     info!("Parsed: {:?}", stmts);
 
-    let resolver = Resolver::new();
+    let mut resolver = Resolver::new();
+    let _ = resolver.resolve(stmts.clone());
+    info!("Resolved side-table: {:?}", resolver.side_table);
+
     let env = Enviroment::new();
     let mut evaluator = Evaluator::new(resolver, env);
 

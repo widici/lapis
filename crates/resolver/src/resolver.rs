@@ -1,20 +1,30 @@
+use std::collections::{HashMap, hash_map::Entry::{Vacant, Occupied}};
 use log::info;
-
-use ast::Visitor;
+use ast::{Visitor, ExpressionEnum};
 use ast::{Expression, Statement, StatementEnum};
 
 pub struct Resolver {
     /// Scopes -> scope -> idents
     scopes: Vec<Vec<String>>,
+    // Call/var/assign-expr -> distance
+    pub side_table: HashMap<Expression, usize>,
 }
 
 impl Resolver {
     pub fn new() -> Self {
         let scopes: Vec<Vec<String>> = Vec::new();
-        Resolver { scopes }
+        let side_table: HashMap<Expression, usize> = HashMap::new();
+        Resolver { scopes, side_table }
     }
 
-    fn resolve(&mut self, stmts: Vec<Statement>) -> Result<(), String> {
+    pub fn resolve(&mut self, stmts: Vec<Statement>) -> Result<(), String> {
+        self.new_scope();
+        self.resolve_inner(stmts)?;
+        self.end_scope();
+        Ok(())
+    }
+
+    fn resolve_inner(&mut self, stmts: Vec<Statement>) -> Result<(), String> {
         for stmt in stmts {
             self.visit_stmt(stmt)?
         }
@@ -45,6 +55,21 @@ impl Resolver {
         Ok(())
     }
 
+    fn update_side_table(&mut self, expr: Expression, ident: String) {
+        for (distance, scope) in self.scopes.iter().rev().enumerate() {
+            if !scope.contains(&ident) {
+                continue;
+            }
+            
+            match self.side_table.entry(expr) {
+                Occupied(..) => unimplemented!(),
+                Vacant(entry ) => { entry.insert(distance); },
+            }
+            return;
+        }
+        unimplemented!()
+    }
+
     fn resolve_cond_branch(&mut self, branch: (Expression, Statement)) -> Result<(), String>{
         self.visit_expr(branch.0)?;
         self.visit_stmt(branch.1)?;
@@ -56,19 +81,39 @@ impl Visitor for Resolver {
     type E = Result<(), String>;
     type S = Result<(), String>;
 
-    fn visit_expr(&mut self, _expr: Expression) -> Self::E {
-        unimplemented!()
+    fn visit_expr(&mut self, expr: Expression) -> Self::E {
+        info!("Visiting expr: {:?}", expr);
+        match *expr.expr_enum.clone() {
+            ExpressionEnum::BinOp { left, right, .. } => {
+                self.visit_expr(left)?;
+                self.visit_expr(right)?;
+            },
+            ExpressionEnum::UnaryOp { expr, .. } => self.visit_expr(expr)?,
+            ExpressionEnum::Call { ident, params } => {
+                for param in params {
+                    self.visit_expr(param)?;
+                }
+                self.update_side_table(expr, ident)
+            },
+            ExpressionEnum::Assignment { ident, right } => {
+                self.visit_expr(right)?;
+                self.update_side_table(expr, ident)
+            }
+            ExpressionEnum::Var { ident } => self.update_side_table(expr, ident),
+            ExpressionEnum::Literal(..) => {},
+        }
+
+        Ok(())
     }
 
     fn visit_stmt(&mut self, stmt: Statement) -> Self::S {
+        info!("Visiting stmt: {:?}", stmt);
         match *stmt.stmt {
+            StatementEnum::Return { expr } => self.visit_expr(expr)?,
             StatementEnum::Expression(expr) => self.visit_expr(expr)?,
-            StatementEnum::VarDeclaration { ident, .. } => self.declare(ident)?,
-            StatementEnum::Return { expr } => self.visit_expr(expr)?,
-            StatementEnum::Return { expr } => self.visit_expr(expr)?,
             StatementEnum::Block { stmts } => {
                 self.new_scope();
-                self.resolve(stmts)?;
+                self.resolve_inner(stmts)?;
                 self.end_scope();
             },
             StatementEnum::FnDeclaration { block, ident, params } => {

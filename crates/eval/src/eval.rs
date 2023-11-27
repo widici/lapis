@@ -13,7 +13,7 @@ pub struct Evaluator {
 
 impl Evaluator {
     pub fn new(mut resolver: Resolver, mut env: Enviroment) -> Self {
-        resolver.new_scope(); // Add global scope
+        //resolver.new_scope(); // Add global scope
         env.new_node(); // Add global node
         Evaluator { resolver, env }
     }
@@ -27,9 +27,7 @@ impl Evaluator {
 
     pub(crate) fn execute_block(&mut self, stmts: Vec<Statement>) -> Result<(), StatementErr> {
         self.env.new_node();
-        self.resolver.new_scope();
         let result = self.evaluate(stmts);
-        self.resolver.end_scope();
         self.env.drop();
         return result
     }
@@ -106,7 +104,7 @@ impl Visitor for Evaluator {
 
     fn visit_expr(&mut self, expr: Expression) -> Self::E {
         //println!("{:?}, {:?}-{:?}", expr.expr, expr.start, expr.end);
-        return match *expr.expr {
+        return match *expr.expr_enum {
             ExpressionEnum::Literal(numeric) => StackType::Literal(numeric),
             ExpressionEnum::BinOp { left, operator, right } => {
                 let (left_st, right_st) = (self.visit_expr(left), self.visit_expr(right));
@@ -149,8 +147,8 @@ impl Visitor for Evaluator {
             ExpressionEnum::Var { ident } => {
                 self.env.get(ident).unwrap()
             },
-            ExpressionEnum::Assignment { ident, expr } => {  
-                let value = self.visit_expr(expr);
+            ExpressionEnum::Assignment { ident, right } => {  
+                let value = self.visit_expr(right);
                 self.env.assign(ident, value.clone());
                 value
             },
@@ -177,14 +175,9 @@ impl Visitor for Evaluator {
             },
             StatementEnum::VarDeclaration { ident, expr } => {
                 let evaluated_expr = self.visit_expr(expr);
-                match self.resolver.visit_stmt(stmt) {
-                    Ok(()) => self.env.declare(ident, evaluated_expr),
-                    Err(_) => unimplemented!(),
-                };
-                return Ok(())
+                self.env.declare(ident, evaluated_expr);
             },
             StatementEnum::Block { stmts } => {
-                self.resolver.new_scope();
                 self.env.new_node();
                 return self.execute_block(stmts)
             },

@@ -1,5 +1,10 @@
 var x = 10
-var z = x
+
+fn f() {
+    x += 1
+}
+
 {
-    var y = x
+    var x = 1
+    f()
 }

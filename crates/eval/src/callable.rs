@@ -26,7 +26,7 @@ impl Callable for Function {
             evaluator.env.declare(ident, value)
         }
         
-        let fn_return = if let StatementEnum::Block { stmts } = *self.block.clone().stmt {
+        let fn_return = if let StatementEnum::Block { stmts } = *self.block.clone().stmt_enum {
             evaluator.execute_block(stmts)
         } else { unreachable!() };
 

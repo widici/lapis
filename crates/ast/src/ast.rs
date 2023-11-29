@@ -7,6 +7,8 @@ use error::span::Span;
 pub struct Expression {
     pub expr_enum: Box<ExpressionEnum>,
     pub span: Span,
+    /// This id limits the amount of exprs that can 
+    pub id: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -36,7 +38,7 @@ pub enum ExpressionEnum {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Statement {
-    pub stmt: Box<StatementEnum>,
+    pub stmt_enum: Box<StatementEnum>,
     pub span: Span,
 }
 
@@ -73,8 +75,7 @@ pub enum StatementEnum {
 
 impl Hash for Expression {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        let address = self as *const _ as usize;
-        address.hash(state)
+        self.id.hash(state)
     }
 }
 

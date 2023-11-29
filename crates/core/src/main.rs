@@ -36,8 +36,8 @@ fn main() {
     let _ = resolver.resolve(stmts.clone());
     info!("Resolved side-table: {:?}", resolver.side_table);
 
-    let env = Enviroment::new();
-    let mut evaluator = Evaluator::new(resolver, env);
+    let env = Enviroment::new(resolver);
+    let mut evaluator = Evaluator::new(env);
 
     let _ = evaluator.evaluate(stmts);
 }

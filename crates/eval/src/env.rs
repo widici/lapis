@@ -1,7 +1,8 @@
 use log::info;
 use std::collections::{HashMap, hash_map::Entry::{Vacant, Occupied}};
 use lexer::token::Literal;
-use ast::ast::Statement;
+use ast::{ast::Statement, Expression};
+use resolver::Resolver;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum StackType {
@@ -15,11 +16,12 @@ pub enum StackType {
 
 pub struct Enviroment {
     nodes: Vec<EnviromentNode>,
+    resolver: Resolver,
 }
 
 impl Enviroment {
-    pub fn new() -> Self {
-        Enviroment { nodes: Vec::new() }
+    pub fn new(resolver: Resolver) -> Self {
+        Enviroment { nodes: Vec::new(), resolver }
     }
 
     pub(crate) fn new_node(&mut self) {
@@ -34,12 +36,15 @@ impl Enviroment {
         info!("Enviroment: {:?}", self.nodes)
     }
 
-    pub(crate) fn assign(&mut self, ident: String, value: StackType) {
-        for node in self.nodes.iter_mut().rev() {
-            if node.stack.contains_key(&ident) {
-                node.assign(ident, value);
-                return;
-            }
+    pub(crate) fn assign(&mut self, ident: String, value: StackType, expr: &Expression) {
+        let env_idx = self.get_env_idx(expr);
+        let node = match self.nodes.get_mut(env_idx) {
+            Some(node) => node,
+            None => unimplemented!(),
+        };
+        if node.stack.contains_key(&ident) {
+            node.assign(ident, value);
+            return;
         }
         unimplemented!()
     }
@@ -48,14 +53,25 @@ impl Enviroment {
         self.nodes.pop();
     }
 
-    pub(crate) fn get(&mut self, ident: String) -> Option<StackType> {
-        for node in self.nodes.iter().rev() {
-            if let Some(value) = node.stack.get(&ident) {
-                return Some(value.to_owned())
-            }
+    pub(crate) fn get(&mut self, ident: String, expr: &Expression) -> Option<StackType> {
+        let env_idx = self.get_env_idx(expr);
+        let node = match self.nodes.get_mut(env_idx) {
+            Some(node) => node,
+            None => unimplemented!(),
+        };
+        node.stack.get(&ident).cloned()
+    }
+
+    fn get_env_idx(&self, expr: &Expression) -> usize {
+        match self.resolver.side_table.get(&expr) {
+            Some(distance) => {
+                let idx = (self.nodes.len() - 1) - distance;
+                println!("{:?} {:?}", idx, self.nodes);
+                return idx
+            },
+            None => unimplemented!()
         }
-        None
-    }                                                                                                                                 
+    }                                                                                                                              
 }
 
 #[derive(Debug)]

@@ -1,21 +1,19 @@
 use ast::{Expression, Statement, ExpressionEnum, StatementEnum};
 use crate::callable::{Function, Callable};
-use resolver::Resolver;
 use lexer::token::{Op, Literal::{Float, Int, Bool, Str, self}};
 use ast::Visitor;
 use crate::env::{StackType, Enviroment};
 use std::ops::{Add, Sub, Mul, Div, Rem, Neg, Not};
 
 pub struct Evaluator {
-    pub(crate) resolver: Resolver,
     pub(crate) env: Enviroment,
 }
 
 impl Evaluator {
-    pub fn new(mut resolver: Resolver, mut env: Enviroment) -> Self {
+    pub fn new(mut env: Enviroment) -> Self {
         //resolver.new_scope(); // Add global scope
         env.new_node(); // Add global node
-        Evaluator { resolver, env }
+        Evaluator { env }
     }
 
     pub fn evaluate(&mut self, stmts: Vec<Statement>) -> Result<(), StatementErr> {
@@ -104,7 +102,7 @@ impl Visitor for Evaluator {
 
     fn visit_expr(&mut self, expr: Expression) -> Self::E {
         //println!("{:?}, {:?}-{:?}", expr.expr, expr.start, expr.end);
-        return match *expr.expr_enum {
+        return match *expr.expr_enum.clone() {
             ExpressionEnum::Literal(numeric) => StackType::Literal(numeric),
             ExpressionEnum::BinOp { left, operator, right } => {
                 let (left_st, right_st) = (self.visit_expr(left), self.visit_expr(right));
@@ -145,11 +143,11 @@ impl Visitor for Evaluator {
                 }
             }
             ExpressionEnum::Var { ident } => {
-                self.env.get(ident).unwrap()
+                self.env.get(ident, &expr).unwrap()
             },
             ExpressionEnum::Assignment { ident, right } => {  
                 let value = self.visit_expr(right);
-                self.env.assign(ident, value.clone());
+                self.env.assign(ident, value.clone(), &expr);
                 value
             },
             ExpressionEnum::Call { ident, params } => {
@@ -157,7 +155,7 @@ impl Visitor for Evaluator {
                     .map(|param| self.visit_expr(param))
                     .collect();
 
-                let fn_decl = match self.env.get(ident) {
+                let fn_decl = match self.env.get(ident, &expr) {
                     Some(decl) => decl,
                     None => unimplemented!()
                 };
@@ -169,7 +167,7 @@ impl Visitor for Evaluator {
     }
 
     fn visit_stmt(&mut self, stmt: Statement) -> Self::S {
-        match *stmt.stmt.clone() {
+        match *stmt.stmt_enum.clone() {
             StatementEnum::Expression(expr) => {
                 self.visit_expr(expr);
             },
@@ -177,10 +175,7 @@ impl Visitor for Evaluator {
                 let evaluated_expr = self.visit_expr(expr);
                 self.env.declare(ident, evaluated_expr);
             },
-            StatementEnum::Block { stmts } => {
-                self.env.new_node();
-                return self.execute_block(stmts)
-            },
+            StatementEnum::Block { stmts } => return self.execute_block(stmts),
             StatementEnum::FnDeclaration { ident, params, block } => {
                 let value = StackType::Function { params, block: block };
                 self.env.declare(ident, value)
@@ -196,7 +191,7 @@ impl Visitor for Evaluator {
                     }
                 }
                 if let Some(block) = else_branch {
-                    match *block.stmt {
+                    match *block.stmt_enum {
                         StatementEnum::Block { stmts } => return self.execute_block(stmts),
                         _ => panic!("Expected block")
                     }
@@ -204,7 +199,7 @@ impl Visitor for Evaluator {
             },
             StatementEnum::While { condition, block } => {
                 while self.visit_expr(condition.clone()) == StackType::Literal(Bool(true)) {
-                    if let StatementEnum::Block { stmts } = *block.stmt.clone() {
+                    if let StatementEnum::Block { stmts } = *block.stmt_enum.clone() {
                         if let Err(e) = self.execute_block(stmts) {
                             match e {
                                 StatementErr::Break => break,

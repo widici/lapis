@@ -8,13 +8,14 @@ pub struct Parser {
     tokens: Vec<Token>,
     current_pos: usize,
     current_token: Token,
-    start_stack: Vec<(usize, usize)>
+    start_stack: Vec<(usize, usize)>,
+    current_expr_id: usize,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Parser {
         let current_token = Token::new(TokenType::EOF, Span::new((0,0), (0, 0)));
-        let mut parser = Parser { tokens, current_pos: 0, current_token, start_stack: Vec::new() };
+        let mut parser = Parser { tokens, current_pos: 0, current_token, start_stack: Vec::new(), current_expr_id: 0 };
         parser.current_token = parser.get_token();
         return parser
     }
@@ -344,11 +345,12 @@ impl Parser {
     }
 
     fn construct_expr(&mut self, expr: ExpressionEnum) -> Expression {
-        Expression { expr_enum: Box::new(expr), span: self.get_span() }
+        self.current_expr_id += 1;
+        Expression { expr_enum: Box::new(expr), span: self.get_span(), id: self.current_expr_id }
     }
 
     fn construct_stmt(&mut self, stmt: StatementEnum) -> Statement {
-        Statement { stmt: Box::new(stmt), span: self.get_span() }
+        Statement { stmt_enum: Box::new(stmt), span: self.get_span() }
     }
 
     fn get_span(&mut self) -> Span {

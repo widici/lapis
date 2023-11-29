@@ -6,7 +6,7 @@ use ast::{Expression, Statement, StatementEnum};
 pub struct Resolver {
     /// Scopes -> scope -> idents
     scopes: Vec<Vec<String>>,
-    // Call/var/assign-expr -> distance
+    // Call/var/assign-expr -> disctance
     pub side_table: HashMap<Expression, usize>,
 }
 
@@ -28,7 +28,7 @@ impl Resolver {
         for stmt in stmts {
             self.visit_stmt(stmt)?
         }
-
+        
         Ok(())
     }
 
@@ -82,7 +82,6 @@ impl Visitor for Resolver {
     type S = Result<(), String>;
 
     fn visit_expr(&mut self, expr: Expression) -> Self::E {
-        info!("Visiting expr: {:?}", expr);
         match *expr.expr_enum.clone() {
             ExpressionEnum::BinOp { left, right, .. } => {
                 self.visit_expr(left)?;
@@ -107,8 +106,7 @@ impl Visitor for Resolver {
     }
 
     fn visit_stmt(&mut self, stmt: Statement) -> Self::S {
-        info!("Visiting stmt: {:?}", stmt);
-        match *stmt.stmt {
+        match *stmt.stmt_enum {
             StatementEnum::Return { expr } => self.visit_expr(expr)?,
             StatementEnum::Expression(expr) => self.visit_expr(expr)?,
             StatementEnum::Block { stmts } => {

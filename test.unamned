@@ -1,10 +1,5 @@
-var x = 10
-
-fn f() {
-    x += 1
+fn f(a, b) {
+    return a + b
 }
 
-{
-    var x = 1
-    f()
-}
+f(1, 1)

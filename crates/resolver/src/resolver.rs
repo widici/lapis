@@ -8,13 +8,15 @@ pub struct Resolver {
     scopes: Vec<Vec<String>>,
     // Call/var/assign-expr -> disctance
     pub side_table: HashMap<Expression, usize>,
+    fn_type: FnType,
+    in_loop: bool,
 }
 
 impl Resolver {
     pub fn new() -> Self {
         let scopes: Vec<Vec<String>> = Vec::new();
         let side_table: HashMap<Expression, usize> = HashMap::new();
-        Resolver { scopes, side_table }
+        Resolver { scopes, side_table, fn_type: FnType::None, in_loop: false }
     }
 
     pub fn resolve(&mut self, stmts: Vec<Statement>) -> Result<(), String> {
@@ -107,7 +109,12 @@ impl Visitor for Resolver {
 
     fn visit_stmt(&mut self, stmt: Statement) -> Self::S {
         match *stmt.stmt_enum {
-            StatementEnum::Return { expr } => self.visit_expr(expr)?,
+            StatementEnum::Return { expr } => {
+                match self.fn_type {
+                    FnType::Fn => self.visit_expr(expr)?,
+                    FnType::None => unimplemented!()
+                }
+            },
             StatementEnum::Expression(expr) => self.visit_expr(expr)?,
             StatementEnum::Block { stmts } => {
                 self.new_scope();
@@ -116,12 +123,14 @@ impl Visitor for Resolver {
             },
             StatementEnum::FnDeclaration { block, ident, params } => {
                 self.declare(ident)?;
+                self.fn_type = FnType::Fn;
                 self.new_scope();
                 for param in params {
                     self.declare(param)?;
                 }
                 self.visit_stmt(block)?;
                 self.end_scope();
+                self.fn_type = FnType::None;
             },
             StatementEnum::VarDeclaration { ident, expr } => {
                 self.visit_expr(expr)?;
@@ -138,11 +147,22 @@ impl Visitor for Resolver {
             },
             StatementEnum::While { condition, block } => {
                 self.visit_expr(condition)?;
+                self.in_loop = true;
                 self.visit_stmt(block)?;
+                self.in_loop = false;
             },
-            StatementEnum::Break | StatementEnum::Continue => {},
+            StatementEnum::Break | StatementEnum::Continue => {
+                if !self.in_loop {
+                    unimplemented!()
+                }
+            },
         }
 
         Ok(())
     }
+}
+
+enum FnType {
+    Fn,
+    None,
 }

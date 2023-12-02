@@ -251,9 +251,10 @@ impl Parser {
         let mut params: Vec<Expression> = Vec::new();
         while ![TokenType::RParen, TokenType::EOF].contains(&self.current_token.tt) {
             params.push(self.parse_expr());
+            self.advance();
             if self.current_token.tt != TokenType::RParen {
                 self.advance()
-            }
+            }   
         }
 
         self.construct_expr(ExpressionEnum::Call { ident, params })

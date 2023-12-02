@@ -1,5 +1,5 @@
 use crate::token::{Token, TokenType};
-use crate::token::Literal::{Float, Int, Bool, Str};
+use crate::token::Literal::{Float, Int, Bool, Str, Char};
 use crate::token::Op::{Div, Sub, Mul, Add, Pow, Rem, Eq, EqEq, Ne, Gt, Lt, Ge, Le, And, Or, Not};
 use error::span::Span;
 
@@ -14,11 +14,11 @@ pub struct Lexer {
 impl Lexer {
     pub fn new(input: Vec<char>) -> Lexer {
         let mut lexer: Lexer = Lexer { input, current_pos: 0, current_char: '\0', current_line: 1, current_col: 1 };
-        lexer.current_char = lexer.get_char();
+        lexer.current_char = lexer.get_current_char();
         return lexer
     }
 
-    fn get_char(&self) -> char {
+    fn get_current_char(&self) -> char {
         if &self.current_pos == &self.input.len() {
             return '\0';
         }
@@ -34,11 +34,12 @@ impl Lexer {
 
     fn advance(&mut self) {
         self.current_pos += 1;
-        self.current_char = self.get_char()
+        self.current_char = self.get_current_char()
     }
 
     fn get_token(&mut self) -> Option<TokenType> {
-        Some(match &self.current_char {
+        Some(match &self.get_current_char() {
+            '\0' => return Some(TokenType::EOF),
             '=' => match self.peek_char() {
                 '=' => {
                     self.advance();
@@ -70,14 +71,18 @@ impl Lexer {
             '+' => TokenType::Op(Add),
             '-' => TokenType::Op(Sub),
             '*' => TokenType::Op(Mul),
-            '/' => TokenType::Op(Div),
+            '/' => match self.peek_char() {
+                '/' => return self.lex_comment(),
+                '*' => return self.lex_block_comment(),
+                _ => TokenType::Op(Div)
+            },
             '^' => TokenType::Op(Pow),
             '%' => TokenType::Op(Rem),
             '(' => TokenType::LParen,
             ')' => TokenType::RParen,
             ',' => TokenType::Comma,
-            '\0' => TokenType::EOF,
             '"' => self.get_string(),
+            '\'' => self.get_char(),
             ' ' => {
                 self.current_col += 1;
                 return None
@@ -157,6 +162,7 @@ impl Lexer {
 
     fn get_string(&mut self) -> TokenType {
         self.advance();
+        //self.current_col += 1;
         let mut str = String::new();
         while self.current_char != '"' {
             str.push(self.current_char);
@@ -169,6 +175,37 @@ impl Lexer {
         return TokenType::Literal(Str(str))
     }
 
+    fn get_char(&mut self) -> TokenType {
+        self.advance();
+        assert_eq!(self.peek_char(), '\'');
+        TokenType::Literal(Char(self.current_char))
+    }
+
+    fn lex_comment(&mut self) -> Option<TokenType> {
+        while !['\0', '\n'].contains(&self.get_current_char()) {
+            self.advance();
+        }
+        self.get_token()
+    }
+
+    fn lex_block_comment(&mut self) -> Option<TokenType> {
+        while !(self.get_current_char() == '*' && self.peek_char() == '/') {
+            let result = match self.get_current_char() {
+                '\n' | '\0' => self.get_token(),
+                _ => None
+            };
+
+            if result == Some(TokenType::EOF) {
+                return result
+            }
+
+            self.advance()
+        }
+        self.advance();
+
+        None
+    }
+    
     pub fn get_tokens(&mut self) -> Vec<Token> {
         let mut tokens: Vec<Token> = Vec::new();
 
@@ -179,6 +216,7 @@ impl Lexer {
             match token {
                 None => {},
                 Some(tt) => {
+                    //info!("{:?} {:?} {:?}", self.get_current_char(), self.current_pos, tt);
                     let end = (self.current_line, self.current_col);
                     let span = Span::new(start, end);
                     tokens.push(Token::new(tt, span));
@@ -186,7 +224,7 @@ impl Lexer {
                 }
             }
 
-            if self.current_char == '\0' {
+            if self.get_current_char() == '\0' {
                 break;
             }
             self.advance()

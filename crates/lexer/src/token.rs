@@ -1,6 +1,5 @@
 use error::span::Span;
 use std::cmp::Ordering;
-use std::ops::Neg;
 use std::mem::discriminant;
 
 #[derive(Debug, Clone)]
@@ -54,6 +53,7 @@ pub enum Literal {
     Float(f64),
     Bool(bool),
     Str(String),
+    Char(char),
 }
 
 impl PartialEq for Literal {

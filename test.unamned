@@ -1,5 +1,5 @@
-fn f(a, b) {
-    return a + b
-}
+// Comment
 
-f(1, 1)
+/*
+Block-Comment
+*/

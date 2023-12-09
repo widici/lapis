@@ -1,4 +1,3 @@
-use std::cmp::Ordering::Greater;
 use std::cmp::Ordering;
 use ast::{Expression, Statement, ExpressionEnum, StatementEnum};
 use lexer::token::{Op, TokenType, Token};
@@ -297,7 +296,11 @@ impl Parser {
         };
     }
 
-    fn parse_expr(&mut self) -> Expression { 
+    fn parse_expr(&mut self) -> Expression {
+        self.parse_expr_inner(false)
+    }
+
+    fn parse_expr_inner(&mut self, is_inner: bool) -> Expression {
         let mut left = self.parse_operand();
         if let Some(token) = self.peek_token() { 
             match token.tt {
@@ -311,13 +314,20 @@ impl Parser {
             self.advance(); // Consumes the operator
             let next_op = self.peek_next_op().unwrap_or(operator);
 
-            let comparison = next_op.partial_cmp(&operator);
             left = match next_op.partial_cmp(&operator) {
                 Some(Ordering::Greater) => self.parse_greater(operator, left),
-                Some(Ordering::Equal) | Some(Ordering::Less) => self.parse_equal(operator, left),
+                Some(Ordering::Equal) => self.parse_equal(operator, left),
+                Some(Ordering::Less) => {
+                    let result = self.parse_equal(operator, left);
+                    match is_inner {
+                        true => return result,
+                        false => result
+                    }
+                }
                 None => unimplemented!()
             };
-
+            
+            // Validates next token and checks if it's on a new line
             if let Some(token) = self.peek_token() {
                 match token.tt {
                     TokenType::Literal(..) | TokenType::LParen | TokenType::Op(..) | TokenType::Ident(..) => {
@@ -327,22 +337,20 @@ impl Parser {
                 }
             } 
 
-            if comparison != Some(Greater) { 
-                self.advance() 
-            }
+            self.advance();
         }
 
         left // Returns on either eof or rparen
     }
 
     fn parse_greater(&mut self, operator: Op, left: Expression) -> Expression {
-        let right = self.parse_expr();
+        let right = self.parse_expr_inner(true);
         self.construct_expr(ExpressionEnum::BinOp { left: left.clone(), operator, right })
     }
 
     fn parse_equal(&mut self, operator: Op, left: Expression) -> Expression {
         let right = self.parse_operand();
-        self.construct_expr(ExpressionEnum::BinOp { left: left.clone(), operator, right })
+        self.construct_expr(ExpressionEnum::BinOp { left, operator, right })
     }
 
     fn construct_expr(&mut self, expr: ExpressionEnum) -> Expression {

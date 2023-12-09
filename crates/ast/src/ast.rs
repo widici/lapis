@@ -1,4 +1,4 @@
-use std::hash::{Hash, Hasher};
+use std::{hash::{Hash, Hasher}, fmt::Debug};
 
 use lexer::token::{Literal, Op};
 use error::span::Span;
@@ -7,7 +7,8 @@ use error::span::Span;
 pub struct Expression {
     pub expr_enum: Box<ExpressionEnum>,
     pub span: Span,
-    /// This id limits the amount of exprs that can 
+    /// This limits the amount of exprs in one program based on the target
+    /// E.g. on 2 ^ 64 - 1 on 64-bit targets
     pub id: usize,
 }
 

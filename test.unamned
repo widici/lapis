@@ -1,5 +1,1 @@
-// Comment
-
-/*
-Block-Comment
-*/
+var x = 10 + 10 * 10 - 10

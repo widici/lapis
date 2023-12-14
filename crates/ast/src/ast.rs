@@ -53,7 +53,7 @@ pub enum StatementEnum {
     FnDeclaration {
         ident: String,
         params: Vec<String>,
-        block: Statement,
+        stmts: Vec<Statement>,
     },
     Block {
         stmts: Vec<Statement>

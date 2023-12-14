@@ -9,36 +9,54 @@ pub enum StackType {
     Literal(Literal),
     Function {
          params: Vec<String>,
-         block: Statement,
+         stmts: Vec<Statement>,
+         env_id: usize,
     },
     Undefined,
 }
 
 pub struct Enviroment {
-    nodes: Vec<EnviromentNode>,
+    pub(crate) nodes: Vec<EnviromentNode>,
     resolver: Resolver,
+    /// This is used in scenarios where the current env id isn't the last node, e.g. during fn calls.
+    pub(crate) env_ptr: Option<usize>
 }
 
 impl Enviroment {
     pub fn new(resolver: Resolver) -> Self {
-        Enviroment { nodes: Vec::new(), resolver }
+        Enviroment { nodes: Vec::new(), resolver, env_ptr: None }
+    }
+
+    fn get_current_env_id(&self) -> usize {
+        match self.env_ptr {
+            None => self.nodes.len() - 1,
+            Some(env_id) => env_id,
+        }
     }
 
     pub(crate) fn new_node(&mut self) {
-        self.nodes.push(EnviromentNode::new());
-        info!("Enviroment: {:?}", self.nodes)
+        let node = EnviromentNode::new();
+        if self.env_ptr.is_none() {
+            self.nodes.push(node);
+        } else {
+            let env_id = self.env_ptr.unwrap() + 1;
+            self.nodes.insert(env_id, node);
+            self.env_ptr = Some(env_id)
+        }
+        info!("New node in Enviroment: {:?}", self.nodes)
     }
 
     pub(crate) fn declare(&mut self, ident: String, value: StackType) {
-        if let Some(node) = self.nodes.last_mut() {
+        let env_id = self.get_current_env_id();
+        if let Some(node) = self.nodes.get_mut(env_id) {
             node.declare(ident, value)
         }
-        info!("Enviroment: {:?}", self.nodes)
+        info!("Declared in Enviroment: {:?}", self.nodes)
     }
 
     pub(crate) fn assign(&mut self, ident: String, value: StackType, expr: &Expression) {
-        let env_idx = self.get_env_idx(expr);
-        let node = match self.nodes.get_mut(env_idx) {
+        let env_id = self.get_env_id(expr);
+        let node = match self.nodes.get_mut(env_id) {
             Some(node) => node,
             None => unimplemented!(),
         };
@@ -50,24 +68,29 @@ impl Enviroment {
     }
 
     pub(crate) fn drop(&mut self) {
-        self.nodes.pop();
+        match self.env_ptr {
+            Some(env_id) => { let _ = self.nodes.remove(env_id); },
+            None => { let _ = self.nodes.pop(); }
+        };
     }
 
-    pub(crate) fn get(&mut self, ident: String, expr: &Expression) -> Option<StackType> {
-        let env_idx = self.get_env_idx(expr);
-        let node = match self.nodes.get_mut(env_idx) {
+    pub(crate) fn get(&mut self, ident: &String, expr: &Expression) -> Option<StackType> {
+        let env_id = self.get_env_id(expr);
+        let node = match self.nodes.get_mut(env_id) {
             Some(node) => node,
             None => unimplemented!(),
         };
-        node.stack.get(&ident).cloned()
+        println!("{:?} {:?}", node.stack, ident);
+        node.stack.get(ident).cloned()
     }
 
-    fn get_env_idx(&self, expr: &Expression) -> usize {
+    fn get_env_id(&self, expr: &Expression) -> usize {
         match self.resolver.side_table.get(&expr) {
             Some(distance) => {
-                let idx = (self.nodes.len() - 1) - distance;
-                println!("{:?} {:?}", idx, self.nodes);
-                return idx
+                println!("Expected from {:?} @ {:?} @ pos {:?}", expr, distance, self.nodes.len() - 1);
+                let current_pos = self.env_ptr.unwrap_or(self.nodes.len() - 1);
+                let id = current_pos - distance;
+                return id
             },
             None => unimplemented!()
         }
@@ -75,7 +98,7 @@ impl Enviroment {
 }
 
 #[derive(Debug)]
-struct EnviromentNode {
+pub(crate) struct EnviromentNode {
     stack: HashMap<String, StackType>
 }
 

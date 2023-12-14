@@ -7,13 +7,13 @@ pub struct Parser {
     tokens: Vec<Token>,
     current_pos: usize,
     current_token: Token,
-    start_stack: Vec<(usize, usize)>,
+    start_stack: Vec<usize>,
     current_expr_id: usize,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Parser {
-        let current_token = Token::new(TokenType::EOF, Span::new((0,0), (0, 0)));
+        let current_token = Token::new(TokenType::EOF, Span::new(0, 0));
         let mut parser = Parser { tokens, current_pos: 0, current_token, start_stack: Vec::new(), current_expr_id: 0 };
         parser.current_token = parser.get_token();
         return parser
@@ -194,10 +194,10 @@ impl Parser {
         self.advance(); // Consume the rparen
         
         self.add_start(self.current_token.span.start);
-        let block = self.parse_block();
-        let block = self.construct_stmt(block);
+        self.advance(); // Consumes the lparen
+        let stmts = self.parse_inner(true);
         //info!("{:?}", block);
-        StatementEnum::FnDeclaration { ident, params, block }
+        StatementEnum::FnDeclaration { ident, params, stmts }
     }
 
     fn parse_if(&mut self) -> StatementEnum {
@@ -331,7 +331,7 @@ impl Parser {
             if let Some(token) = self.peek_token() {
                 match token.tt {
                     TokenType::Literal(..) | TokenType::LParen | TokenType::Op(..) | TokenType::Ident(..) => {
-                        if token.span.start.0 != self.current_token.span.end.0 { return left }
+                        if !(token.span.comp_line_col(&self.current_token.span)) { return left }
                     },
                     _ => return left
                 }
@@ -366,11 +366,11 @@ impl Parser {
         Span::new(self.get_start(), self.current_token.span.end)
     }
 
-    fn add_start(&mut self, start: (usize, usize)) { 
+    fn add_start(&mut self, start: usize) { 
         self.start_stack.push(start);
      }
     
-    fn get_start(&mut self) -> (usize, usize) {
+    fn get_start(&mut self) -> usize {
         match self.start_stack.pop() {
             Some(start) => start,
             None => unreachable!(),

@@ -210,15 +210,14 @@ impl Lexer {
         let mut tokens: Vec<Token> = Vec::new();
 
         loop {
-            let start = (self.current_line, self.current_col);
+            let start = self.current_col;
             let token = self.get_token();
 
             match token {
                 None => {},
                 Some(tt) => {
                     //info!("{:?} {:?} {:?}", self.get_current_char(), self.current_pos, tt);
-                    let end = (self.current_line, self.current_col);
-                    let span = Span::new(start, end);
+                    let span = Span::new(start, self.current_pos);
                     tokens.push(Token::new(tt, span));
                     self.current_col += 1;
                 }

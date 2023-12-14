@@ -76,9 +76,9 @@ impl Evaluator {
         })
     }
 
-    fn execute_cond_branch(&mut self, condition: Expression, block: Statement) -> Option<Result<(), StatementErr>>{
-        let evaled = self.visit_expr(condition);
-        match evaled {
+    fn execute_cond_branch(&mut self, condition: Expression, block: Statement) -> Option<Result<(), StatementErr>> {
+        let evaluated = self.visit_expr(condition);
+        match evaluated {
             StackType::Literal(Bool(boolean)) => {
                 if boolean {
                     return Some(self.visit_stmt(block))
@@ -148,7 +148,7 @@ impl Visitor for Evaluator {
                 }
             }
             ExpressionEnum::Var { ident } => {
-                self.env.get(ident, &expr).unwrap()
+                self.env.get(&ident, &expr).unwrap()
             },
             ExpressionEnum::Assignment { ident, right } => {  
                 let value = self.visit_expr(right);
@@ -160,7 +160,7 @@ impl Visitor for Evaluator {
                     .map(|param| self.visit_expr(param))
                     .collect();
 
-                let fn_decl = match self.env.get(ident, &expr) {
+                let fn_decl = match self.env.get(&ident, &expr) {
                     Some(decl) => decl,
                     None => unimplemented!()
                 };
@@ -181,8 +181,9 @@ impl Visitor for Evaluator {
                 self.env.declare(ident, evaluated_expr);
             },
             StatementEnum::Block { stmts } => return self.execute_block(stmts),
-            StatementEnum::FnDeclaration { ident, params, block } => {
-                let value = StackType::Function { params, block: block };
+            StatementEnum::FnDeclaration { ident, params, stmts } => {
+                let env_id = self.env.nodes.len() - 1;
+                let value = StackType::Function { params, stmts, env_id };
                 self.env.declare(ident, value)
             },
             StatementEnum::Return { expr } => return Err(StatementErr::Return(self.visit_expr(expr))),
@@ -198,7 +199,7 @@ impl Visitor for Evaluator {
                 if let Some(block) = else_branch {
                     match *block.stmt_enum {
                         StatementEnum::Block { stmts } => return self.execute_block(stmts),
-                        _ => panic!("Expected block")
+                        _ => unreachable!()
                     }
                 }
             },

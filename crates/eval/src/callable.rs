@@ -1,4 +1,4 @@
-use ast::{Statement, StatementEnum};
+use ast::Statement;
 use crate::env::StackType;
 use crate::eval::{Evaluator, StatementErr};
 
@@ -9,7 +9,8 @@ pub trait Callable {
 
 pub(crate) struct Function {
     pub params: Vec<String>,
-    pub block: Statement,
+    pub stmts: Vec<Statement>,
+    env_id: usize,
 }
 
 impl Callable for Function {
@@ -22,13 +23,16 @@ impl Callable for Function {
             unimplemented!()
         }
         
+        evaluator.env.env_ptr = Some(self.env_id);
+        evaluator.env.new_node(); // Begining of execution of fn stmts
+
         for (ident, value) in self.params.clone().into_iter().zip(params.into_iter()) {
             evaluator.env.declare(ident, value)
         }
-        
-        let fn_return = if let StatementEnum::Block { stmts } = *self.block.clone().stmt_enum {
-            evaluator.execute_block(stmts)
-        } else { unreachable!() };
+        let fn_return = evaluator.evaluate(self.stmts.clone());
+    
+        evaluator.env.drop(); // End of execution of fn stmts
+        evaluator.env.env_ptr = None;
 
         return match fn_return {
             Ok(()) => StackType::Undefined,
@@ -43,8 +47,8 @@ impl Callable for Function {
 impl From<StackType> for Function {
     fn from(value: StackType) -> Self {
         match value {
-            StackType::Function { params, block } => {
-                Self { params, block }
+            StackType::Function { params, stmts, env_id } => {
+                Self { params, stmts, env_id }
             },
             _ => unreachable!()
         }

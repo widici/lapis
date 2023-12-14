@@ -6,7 +6,7 @@ use ast::{Expression, Statement, StatementEnum};
 pub struct Resolver {
     /// Scopes -> scope -> idents
     scopes: Vec<Vec<String>>,
-    // Call/var/assign-expr -> disctance
+    // Call/var/assign-expr -> distance
     pub side_table: HashMap<Expression, usize>,
     fn_type: FnType,
     in_loop: bool,
@@ -53,7 +53,7 @@ impl Resolver {
         } else {
             panic!("{:?}", self.scopes)
         }
-        info!("Scopes: {:?}", self.scopes);
+        info!("Declared in scopes: {:?}", self.scopes);
         Ok(())
     }
 
@@ -62,7 +62,7 @@ impl Resolver {
             if !scope.contains(&ident) {
                 continue;
             }
-            
+
             match self.side_table.entry(expr) {
                 Occupied(..) => unimplemented!(),
                 Vacant(entry ) => { entry.insert(distance); },
@@ -121,14 +121,16 @@ impl Visitor for Resolver {
                 self.resolve_inner(stmts)?;
                 self.end_scope();
             },
-            StatementEnum::FnDeclaration { block, ident, params } => {
+            StatementEnum::FnDeclaration { stmts, ident, params } => {
                 self.declare(ident)?;
                 self.fn_type = FnType::Fn;
                 self.new_scope();
                 for param in params {
                     self.declare(param)?;
                 }
-                self.visit_stmt(block)?;
+                for stmt in stmts {
+                    self.visit_stmt(stmt)?
+                }
                 self.end_scope();
                 self.fn_type = FnType::None;
             },

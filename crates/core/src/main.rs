@@ -2,7 +2,6 @@
 extern crate log;
 
 use eval::{eval::Evaluator, env::Enviroment};
-use miette::SourceCode;
 use resolver::Resolver;
 use lexer::Lexer;
 use parser::Parser;
@@ -14,11 +13,10 @@ const FILE_PATH: &'static str = "./test.unamned";
 fn main() {
     env_logger::init();
 
-    /*let span = Span::new((1, 3), (1, 12));
+    let span = Span::new(0, 3);
     let error = Error::new(ErrorKind::Unexpected { expected: "1".to_string(), found: "2".to_string(), span });
     let report = error.to_report();
     println!("{:?}", report);
-    */
     
     let chars: Vec<char> = match std::fs::read_to_string(FILE_PATH) {
         Ok(src) => src.chars().collect(),

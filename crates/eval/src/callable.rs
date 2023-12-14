@@ -34,7 +34,7 @@ impl Callable for Function {
         evaluator.env.drop(); // End of execution of fn stmts
         evaluator.env.env_ptr = None;
 
-        return match fn_return {
+        match fn_return {
             Ok(()) => StackType::Undefined,
             Err(e) => match e {
                 StatementErr::Return(stack_type) => stack_type,

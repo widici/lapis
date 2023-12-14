@@ -10,6 +10,7 @@ pub struct Evaluator {
 }
 
 impl Evaluator {
+    #[must_use]
     pub fn new(mut env: Enviroment) -> Self {
         //resolver.new_scope(); // Add global scope
         env.new_node(); // Add global node
@@ -27,13 +28,13 @@ impl Evaluator {
         self.env.new_node();
         let result = self.evaluate(stmts);
         self.env.drop();
-        return result
+        result
     }
 
     fn perform_arth_op<T>(left: T, operator: Op, right: T) -> Option<T> 
         where T: Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + Rem<Output = T> + Pow<Output = T>
     {
-        return Some(match operator {
+        Some(match operator {
             Op::Add => left + right,
             Op::Sub => left - right,
             Op::Mul => left * right,
@@ -44,10 +45,10 @@ impl Evaluator {
         })
     }
 
-    fn perform_comp_op<T>(left: T, operator: Op, right: T) -> Option<bool>
+    fn perform_comp_op<T>(left: &T, operator: Op, right: &T) -> Option<bool>
         where T: PartialOrd + PartialEq
     {
-        return Some(match operator {
+        Some(match operator {
             Op::EqEq | Op::Ne => Evaluator::perform_eq_op(left, operator, right).unwrap(),
             Op::Gt => left > right,
             Op::Ge => left >= right,
@@ -57,10 +58,10 @@ impl Evaluator {
         })
     }
 
-    fn perform_eq_op<T>(left: T, operator: Op, right: T) -> Option<bool>
+    fn perform_eq_op<T>(left: &T, operator: Op, right: &T) -> Option<bool>
         where T: PartialEq
     {
-        return Some(match operator {
+        Some(match operator {
             Op::EqEq => left == right,
             Op::Ne => left != right,
             _ => return None,
@@ -69,7 +70,7 @@ impl Evaluator {
 
     fn perform_bool_op(left: bool, operator: Op, right: bool) -> Option<bool> {
         Some(match operator {
-            Op::EqEq | Op::Ne => return Self::perform_eq_op(left, operator, right),
+            Op::EqEq | Op::Ne => return Self::perform_eq_op(&left, operator, &right),
             Op::And => left && right,
             Op::Or => left || right,
             _ => return None,
@@ -102,7 +103,7 @@ impl Visitor for Evaluator {
 
     fn visit_expr(&mut self, expr: Expression) -> Self::E {
         //println!("{:?}, {:?}-{:?}", expr.expr, expr.start, expr.end);
-        return match *expr.expr_enum.clone() {
+        match *expr.expr_enum.clone() {
             ExpressionEnum::Literal(numeric) => StackType::Literal(numeric),
             ExpressionEnum::BinOp { left, operator, right } => {
                 let (left_st, right_st) = (self.visit_expr(left), self.visit_expr(right));
@@ -110,14 +111,14 @@ impl Visitor for Evaluator {
                     (StackType::Literal(Int(left)), StackType::Literal(Int(right))) => {
                         if let Some(int) = Evaluator::perform_arth_op(left, operator, right) {
                             StackType::Literal(Int(int))
-                        } else if let Some(bool) = Evaluator::perform_comp_op(left, operator, right) {
+                        } else if let Some(bool) = Evaluator::perform_comp_op(&left, operator, &right) {
                             StackType::Literal(Bool(bool))
                         } else { unimplemented!() }
                     },
                     (StackType::Literal(Float(left)), StackType::Literal(Float(right))) => {
                         if let Some(float) = Evaluator::perform_arth_op(left, operator, right) {
                             StackType::Literal(Float(float))
-                        } else if let Some(bool) = Evaluator::perform_comp_op(left, operator, right) {
+                        } else if let Some(bool) = Evaluator::perform_comp_op(&left, operator, &right) {
                             StackType::Literal(Bool(bool))
                         } else { unimplemented!() }
                     },
@@ -127,12 +128,12 @@ impl Visitor for Evaluator {
                         } else { unimplemented!() }
                     },
                     (StackType::Literal(Str(left_str)), StackType::Literal(Str(right_str))) => {
-                        if let Some(bool) = Evaluator::perform_eq_op(left_str, operator, right_str) {
+                        if let Some(bool) = Evaluator::perform_eq_op(&left_str, operator, &right_str) {
                             StackType::Literal(Bool(bool))
                         } else { unimplemented!() }
                     },
                     (StackType::Literal(Char(left_char)), StackType::Literal(Char(right_char))) => {
-                        if let Some(bool) = Evaluator::perform_eq_op(left_char, operator, right_char) {
+                        if let Some(bool) = Evaluator::perform_eq_op(&left_char, operator, &right_char) {
                             StackType::Literal(Bool(bool))
                         } else { unimplemented!() }
                     },
@@ -141,7 +142,7 @@ impl Visitor for Evaluator {
             },
             ExpressionEnum::UnaryOp { operator, expr } => {
                 let stack_type = self.visit_expr(expr);
-                return match operator {
+                match operator {
                     Op::Sub => -stack_type,
                     Op::Not => !stack_type,
                     _ => unreachable!(),
@@ -172,7 +173,7 @@ impl Visitor for Evaluator {
     }
 
     fn visit_stmt(&mut self, stmt: Statement) -> Self::S {
-        match *stmt.stmt_enum.clone() {
+        match *stmt.stmt_enum {
             StatementEnum::Expression(expr) => {
                 self.visit_expr(expr);
             },
@@ -210,7 +211,7 @@ impl Visitor for Evaluator {
                             match e {
                                 StatementErr::Break => break,
                                 StatementErr::Continue => continue,
-                                e => return Err(e)
+                                e @ StatementErr::Return(_) => return Err(e)
                             }
                         }
                     }
@@ -231,7 +232,7 @@ trait Pow<Rhs = Self> {
 impl Pow<i64> for i64 {
     type Output = i64;
     fn pow(self, rhs: i64) -> Self::Output {
-        self.pow(rhs as u32) as i64
+        self.pow(u32::try_from(rhs).unwrap())
     }
 }
 
@@ -263,10 +264,7 @@ impl Not for StackType {
 
     fn not(self) -> Self::Output {
         let result = match self {
-            Self::Literal(literal) => match literal {
-                Literal::Bool(boolean) => Literal::Bool(!boolean),
-                _ => unreachable!(),
-            },
+            Self::Literal(Literal::Bool(boolean)) => Literal::Bool(!boolean),
             _ => unreachable!()
         };
         StackType::Literal(result)

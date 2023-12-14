@@ -1,0 +1,44 @@
+deny = [
+    "unsafe-code"
+]
+
+warn = [
+    "clippy::all",
+    "clippy::pedantic",
+    "clippy::nursery",
+    "clippy::cargo"
+]
+
+allow = [
+    "clippy::cargo_common_metadata",
+
+    "clippy::missing_errors_doc",
+    "clippy::new_without_default",
+    "clippy::unnecessary_wraps",
+    
+    "clippy::uninlined_format_args",
+
+    "clippy::module-name-repetitions",
+
+    "clippy::implicit_clone",
+
+    "clippy::semicolon_if_nothing_returned",
+    "clippy::redundant-static-lifetimes",
+    "clippy::use_self",
+
+    "clippy::option_if_let_else",
+    "clippy::manual_let_else",
+    "clippy::match_bool",
+    "clippy::single-match-else",
+
+    "clippy::implicit_return",
+    "clippy::needless_return",
+
+    "clippy::shadow_same",
+    "clippy::shadow_reuse",
+
+    "clippy::unreachable",
+    "clippy::unimplemented",
+
+    "clippy::unwrap_used"
+]

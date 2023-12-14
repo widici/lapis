@@ -12,11 +12,12 @@ pub struct Parser {
 }
 
 impl Parser {
+    #[must_use]
     pub fn new(tokens: Vec<Token>) -> Parser {
         let current_token = Token::new(TokenType::EOF, Span::new(0, 0));
         let mut parser = Parser { tokens, current_pos: 0, current_token, start_stack: Vec::new(), current_expr_id: 0 };
         parser.current_token = parser.get_token();
-        return parser
+        parser
     }
 
     pub fn parse(&mut self) -> Vec<Statement> {
@@ -32,9 +33,8 @@ impl Parser {
                     //self.advance(); // Consumes the rcurly
                     if is_inner {
                         break
-                    } else {
-                        unimplemented!()
                     }
+                    unimplemented!()
                 },
                 _ => { 
                     stmts.push(self.parse_stmt());
@@ -43,7 +43,7 @@ impl Parser {
             }
         }
         //println!("Returns: {:?}", self.current_token);
-        return stmts
+        stmts
     }
 
     fn parse_stmt(&mut self) -> Statement {
@@ -93,7 +93,7 @@ impl Parser {
     }
 
     fn peek_token(&self) -> Option<Token> {
-        return if self.current_pos == self.tokens.len() - 1 {
+        if self.current_pos == self.tokens.len() - 1 {
             None
         } else {
             Some(self.tokens[self.current_pos + 1].clone())
@@ -101,7 +101,7 @@ impl Parser {
     }
 
     fn get_token(&self) -> Token {
-        return self.tokens[self.current_pos].clone()
+        self.tokens[self.current_pos].clone()
     }
 
     fn advance(&mut self) {
@@ -209,14 +209,14 @@ impl Parser {
             elif_branches.push(self.parse_cond_branch());
         }
 
-        let mut else_branch: Option<Statement> = None;
-        if self.peek_token().unwrap().tt == TokenType::Else {
+        let else_branch: Option<Statement> = if self.peek_token().unwrap().tt == TokenType::Else {
             self.advance(); // Consumes the rcurly
             self.advance(); // Consumes the else-kw
             self.add_start(self.current_token.span.start);
             let block = self.parse_block();
-            else_branch = Some(self.construct_stmt(block));
-        }
+            Some(self.construct_stmt(block))
+        } else { None };
+
         StatementEnum::If { if_branch, elif_branches, else_branch }
     }
 
@@ -260,40 +260,38 @@ impl Parser {
     }
 
     fn parse_operand(&mut self) -> Expression {
-        return match &self.get_token().tt {
+        match &self.get_token().tt {
             TokenType::Literal(literal) => {
                 self.add_start(self.current_token.span.start);
-                let result = self.construct_expr(ExpressionEnum::Literal(literal.to_owned()));
-                result
+                
+                self.construct_expr(ExpressionEnum::Literal(literal.to_owned()))
             },
             TokenType::LParen => {
                 self.advance(); // Consumes the lparen
                 let expr_result = self.parse_expr();
                 self.advance();
-                return expr_result
+                expr_result
             },
             TokenType::Op(op) => match op {
                 Op::Sub | Op::Not => {
                     self.add_start(self.current_token.span.start);
                     self.advance(); // Consume the sub/not
                     let expr = self.parse_operand();
-                    self.construct_expr(ExpressionEnum::UnaryOp { operator: op.clone(), expr })
+                    self.construct_expr(ExpressionEnum::UnaryOp { operator: *op, expr })
                 }
                 _ => unimplemented!()
-            }    
-
+            },  
             TokenType::Ident(name) => {
-                match self.peek_token() {
-                    Some(Token { tt: TokenType::LParen, .. }) => return self.parse_call(),
-                    _ => {
-                        self.add_start(self.current_token.span.start);
-                        let result = self.construct_expr(ExpressionEnum::Var { ident: name.to_owned() });
-                        result
-                    }
+                if let Some(Token { tt: TokenType::LParen, .. }) = self.peek_token() {
+                    self.parse_call() 
+                } else {
+                    self.add_start(self.current_token.span.start);
+                    self.construct_expr(ExpressionEnum::Var { ident: name.to_owned() })
                 }
+                        
             },
             other => panic!("{:?}", other)
-        };
+        }
     }
 
     fn parse_expr(&mut self) -> Expression {
@@ -303,9 +301,8 @@ impl Parser {
     fn parse_expr_inner(&mut self, is_inner: bool) -> Expression {
         let mut left = self.parse_operand();
         if let Some(token) = self.peek_token() { 
-            match token.tt {
-                TokenType::Op(..) => self.advance(), // Consumes the operand
-                _ => {}
+            if let TokenType::Op(..) = token.tt { 
+                self.advance() 
             }
         }
 
@@ -345,7 +342,7 @@ impl Parser {
 
     fn parse_greater(&mut self, operator: Op, left: Expression) -> Expression {
         let right = self.parse_expr_inner(true);
-        self.construct_expr(ExpressionEnum::BinOp { left: left.clone(), operator, right })
+        self.construct_expr(ExpressionEnum::BinOp { left, operator, right })
     }
 
     fn parse_equal(&mut self, operator: Op, left: Expression) -> Expression {

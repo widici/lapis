@@ -13,6 +13,7 @@ pub struct Resolver {
 }
 
 impl Resolver {
+    #[must_use]
     pub fn new() -> Self {
         let scopes: Vec<Vec<String>> = Vec::new();
         let side_table: HashMap<Expression, usize> = HashMap::new();
@@ -57,9 +58,9 @@ impl Resolver {
         Ok(())
     }
 
-    fn update_side_table(&mut self, expr: Expression, ident: String) {
+    fn update_side_table(&mut self, expr: Expression, ident: &String) {
         for (distance, scope) in self.scopes.iter().rev().enumerate() {
-            if !scope.contains(&ident) {
+            if !scope.contains(ident) {
                 continue;
             }
 
@@ -94,13 +95,13 @@ impl Visitor for Resolver {
                 for param in params {
                     self.visit_expr(param)?;
                 }
-                self.update_side_table(expr, ident)
+                self.update_side_table(expr, &ident)
             },
             ExpressionEnum::Assignment { ident, right } => {
                 self.visit_expr(right)?;
-                self.update_side_table(expr, ident)
+                self.update_side_table(expr, &ident)
             }
-            ExpressionEnum::Var { ident } => self.update_side_table(expr, ident),
+            ExpressionEnum::Var { ident } => self.update_side_table(expr, &ident),
             ExpressionEnum::Literal(..) => {},
         }
 

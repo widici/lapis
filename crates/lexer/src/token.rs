@@ -9,7 +9,8 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(tt: TokenType, span: Span) -> Self {
+    #[must_use]
+    pub const fn new(tt: TokenType, span: Span) -> Self {
         Token { tt, span }
     }
 }
@@ -66,15 +67,15 @@ impl PartialEq for Literal {
 }
 
 impl Literal {
-    fn get_bool(&self) -> Option<bool> {
+    const fn get_bool(&self) -> Option<bool> {
         match &self {
-            Literal::Bool(boolean) => Some(boolean.clone()),
+            Literal::Bool(boolean) => Some(*boolean),
             _ => None,
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub enum Op {
     Not,
     //Neg,
@@ -110,7 +111,8 @@ pub enum Op {
 }
 
 impl Op {
-    pub fn get_precedence(&self) -> u8 {
+    #[must_use]
+    pub const fn get_precedence(&self) -> u8 {
         match &self {
             Op::Eq => 0, // Eq
             Op::Or => 1, // Or
@@ -151,7 +153,7 @@ fn op_cmp_test() {
     use std::cmp::Ordering::Less;
     let (a, b) = (Op::Add, Op::Mul);
     assert_eq!(a.partial_cmp(&b), Some(Less));
-    assert_eq!(a > b, false);
-    assert_eq!(a < b, true);
-    assert_eq!(a == b, false);
+    assert!(a <= b);
+    assert!(a < b);
+    assert!(a != b);
 }

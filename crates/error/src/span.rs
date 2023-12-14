@@ -11,22 +11,24 @@ pub struct Span {
 }
 
 impl Span {
+    #[must_use]
     pub fn new(start: usize, end: usize) -> Self {
         Self { start, end, source: Span::get_src() }
     }
 
+    #[must_use]
     pub fn get_line_col(&self) -> ((usize, usize), (usize, usize)) {
         let lookup = LineColLookup::new(&self.source);
         (lookup.get(self.start), lookup.get(self.end))
     }
 
+    #[must_use]
     pub fn comp_line_col(&self, other: &Self) -> bool {
         self.get_line_col().0.0 == other.get_line_col().1.0
     }
 
     fn get_src() -> String {
-        let source = read_to_string("./test.unamned").unwrap();
-        return source
+        read_to_string("./test.unamned").unwrap()
     }
 }
 

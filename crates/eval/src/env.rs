@@ -18,12 +18,14 @@ pub enum StackType {
 pub struct Enviroment {
     pub(crate) nodes: Vec<EnviromentNode>,
     resolver: Resolver,
-    /// This is used in scenarios where the current env id isn't the last node, e.g. during fn calls.
+    /// This is used in scenarios where the current env id isn't the last node
+    /// E.g. during fn calls, where the current scope needs to move to be below the fn decl
     pub(crate) env_ptr: Option<usize>
 }
 
 impl Enviroment {
-    pub fn new(resolver: Resolver) -> Self {
+    #[must_use]
+    pub const fn new(resolver: Resolver) -> Self {
         Enviroment { nodes: Vec::new(), resolver, env_ptr: None }
     }
 
@@ -85,12 +87,12 @@ impl Enviroment {
     }
 
     fn get_env_id(&self, expr: &Expression) -> usize {
-        match self.resolver.side_table.get(&expr) {
+        match self.resolver.side_table.get(expr) {
             Some(distance) => {
                 println!("Expected from {:?} @ {:?} @ pos {:?}", expr, distance, self.nodes.len() - 1);
                 let current_pos = self.env_ptr.unwrap_or(self.nodes.len() - 1);
-                let id = current_pos - distance;
-                return id
+                
+                current_pos - distance
             },
             None => unimplemented!()
         }
@@ -108,7 +110,7 @@ impl EnviromentNode {
     }
 
     pub(crate) fn declare(&mut self, ident: String, value: StackType) {
-        match self.stack.entry(ident.clone()) {
+        match self.stack.entry(ident) {
             Occupied(..) => unimplemented!(),
             Vacant(entry ) => { entry.insert(value); },
         }

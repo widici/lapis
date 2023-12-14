@@ -8,11 +8,13 @@ pub struct Error {
 }
 
 impl Error {
+    #[must_use]
     pub fn new(kind: ErrorKind) -> Self {
         let span = kind.get_span();
         Error { kind, span }
     }
 
+    #[must_use]
     pub fn to_report(&self) -> Report {
         Report::new(self.kind.clone()).with_source_code(self.span.clone())
     }

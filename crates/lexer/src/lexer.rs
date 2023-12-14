@@ -12,24 +12,25 @@ pub struct Lexer {
 }
 
 impl Lexer {
+    #[must_use]
     pub fn new(input: Vec<char>) -> Lexer {
         let mut lexer: Lexer = Lexer { input, current_pos: 0, current_char: '\0', current_line: 1, current_col: 1 };
         lexer.current_char = lexer.get_current_char();
-        return lexer
+        lexer
     }
 
     fn get_current_char(&self) -> char {
-        if &self.current_pos == &self.input.len() {
+        if self.current_pos == self.input.len() {
             return '\0';
         }
-        return self.input[self.current_pos]
+        self.input[self.current_pos]
     }
 
     fn peek_char(&self) -> char {
         if &self.current_pos + 1 == self.input.len() {
             return '\0'
         }
-        return self.input[self.current_pos + 1]
+        self.input[self.current_pos + 1]
     }
 
     fn advance(&mut self) {
@@ -98,10 +99,10 @@ impl Lexer {
             }
             '{' => TokenType::LCurly,
             '}' => TokenType::RCurly,
-            _v => {
-                if _v.is_numeric() {
+            v => {
+                if v.is_numeric() {
                     self.get_numeric()
-                } else if _v.is_ascii_alphabetic() {
+                } else if v.is_ascii_alphabetic() {
                     self.get_identifier()
                 } else {
                     TokenType::Illegal{pos: self.current_pos, char: self.current_char}
@@ -117,7 +118,7 @@ impl Lexer {
             self.current_col += 1;
         }
 
-        let ident: String = self.input[start..self.current_pos+1].iter().collect();
+        let ident: String = self.input[start..=self.current_pos].iter().collect();
         return match ident.as_str() {
             "var" => TokenType::Var,
             "fn" => TokenType::Fn,
@@ -149,12 +150,12 @@ impl Lexer {
             self.current_col += 1;
         }
 
-        return match int_str.contains('.') {
+        match int_str.contains('.') {
             true => {
                 if int_str.ends_with('.') {
                     int_str.push('0')
                 }
-                return TokenType::Literal(Float(int_str.parse::<f64>().unwrap()))
+                TokenType::Literal(Float(int_str.parse::<f64>().unwrap()))
             },
             false => TokenType::Literal(Int(int_str.parse::<i64>().unwrap())),
         }
@@ -172,7 +173,7 @@ impl Lexer {
             self.advance();
             self.current_col += 1;
         }
-        return TokenType::Literal(Str(str))
+        TokenType::Literal(Str(str))
     }
 
     fn get_char(&mut self) -> TokenType {
@@ -229,7 +230,7 @@ impl Lexer {
             self.advance()
         }
 
-        return tokens;
+        tokens
     }
 }
 

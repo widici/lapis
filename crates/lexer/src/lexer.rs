@@ -234,13 +234,25 @@ impl Lexer {
     }
 }
 
-/*
-#[test]
-fn lexer_test() {
-    let input: Vec<char> = "11 + 2 * 8".chars().collect();
-    let mut lexer = Lexer::new(input);
-    let result = lexer.get_tokens();
-    let expected = vec![TokenType::Literal(Int(11)), TokenType::Op(Add), TokenType::Literal(Int(2)), TokenType::Op(Mul), TokenType::Literal(Int(8)), TokenType::EOF];
-    assert_eq!(result, expected)
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::token::Literal;
+    use crate::token::Op;
+
+    #[test]
+    fn lexer_test() {
+        let test_cases = [
+            ("11 + 2 * 8", vec![TokenType::Literal(Int(11)), TokenType::Op(Add), TokenType::Literal(Int(2)), TokenType::Op(Mul), TokenType::Literal(Int(8)), TokenType::EOF]),
+            ("if true {\n\tvar x = 10\n}", vec![TokenType::If, TokenType::Literal(Literal::Bool(true)), TokenType::LCurly, TokenType::Var, TokenType::Ident("x".to_string()), TokenType::Op(Op::Eq), TokenType::Literal(Literal::Int(10 as i64)), TokenType::RCurly, TokenType::EOF])
+        ];
+        
+        for case in test_cases {
+            let input: Vec<char> = case.0.chars().collect();
+            let mut lexer = Lexer::new(input);
+            let result = lexer.get_tokens();
+            let result: Vec<TokenType> = result.into_iter().map(|token| token.tt).collect();
+            assert_eq!(result, case.1)
+        }
+    }
 }
-*/

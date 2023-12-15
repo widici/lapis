@@ -11,7 +11,7 @@ set -e
 #cargo fmt -- --check
 
 echo "Running cargo tests:"
-cargo test
+cargo test --all
 
 echo "Running cargo cranky:"
 cargo cranky

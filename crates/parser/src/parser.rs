@@ -325,10 +325,10 @@ impl Parser {
             };
             
             // Validates next token and checks if it's on a new line
-            if let Some(token) = self.peek_token() {
+            if let Some(mut token) = self.peek_token() {
                 match token.tt {
                     TokenType::Literal(..) | TokenType::LParen | TokenType::Op(..) | TokenType::Ident(..) => {
-                        if !(token.span.comp_line_col(&self.current_token.span)) { return left }
+                        if !(token.span.comp_line_col(&mut self.current_token.span)) { return left }
                     },
                     _ => return left
                 }

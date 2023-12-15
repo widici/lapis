@@ -147,13 +147,17 @@ impl Debug for TokenType {
 }
 */
 
-
-#[test]
-fn op_cmp_test() {
+#[cfg(test)]
+mod tests {
+    use super::Op;
     use std::cmp::Ordering::Less;
-    let (a, b) = (Op::Add, Op::Mul);
-    assert_eq!(a.partial_cmp(&b), Some(Less));
-    assert!(a <= b);
-    assert!(a < b);
-    assert!(a != b);
+
+    #[test]
+    fn op_cmp_test() {
+        let (a, b) = (Op::Add, Op::Mul);
+        assert_eq!(a.partial_cmp(&b), Some(Less));
+        assert!(a <= b);
+        assert!(a < b);
+        assert!(a != b);
+    }
 }

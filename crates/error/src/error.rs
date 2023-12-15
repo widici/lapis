@@ -15,8 +15,8 @@ impl Error {
     }
 
     #[must_use]
-    pub fn to_report(&self) -> Report {
-        Report::new(self.kind.clone()).with_source_code(self.span.clone())
+    pub fn to_report(self) -> Report {
+        Report::new(self.kind).with_source_code(self.span)
     }
 }
 

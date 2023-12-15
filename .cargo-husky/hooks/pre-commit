@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# To update the pre-commit run:
+# rm .git/hooks/pre-commit
+# cargo clean -p cargo-husky
+# cargo test
+
+set -e
+
+#echo "Running cargo fmt:"
+#cargo fmt -- --check
+
+echo "Running cargo tests:"
+cargo test
+
+echo "Running cargo cranky:"
+cargo cranky

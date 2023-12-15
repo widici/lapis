@@ -82,14 +82,13 @@ impl Enviroment {
             Some(node) => node,
             None => unimplemented!(),
         };
-        println!("{:?} {:?}", node.stack, ident);
         node.stack.get(ident).cloned()
     }
 
     fn get_env_id(&self, expr: &Expression) -> usize {
         match self.resolver.side_table.get(expr) {
             Some(distance) => {
-                println!("Expected from {:?} @ {:?} @ pos {:?}", expr, distance, self.nodes.len() - 1);
+                //log!("Expected from {:?} @ {:?} @ pos {:?}", expr, distance, self.nodes.len() - 1);
                 let current_pos = self.env_ptr.unwrap_or(self.nodes.len() - 1);
                 
                 current_pos - distance

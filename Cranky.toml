@@ -11,6 +11,7 @@ warn = [
 
 allow = [
     "clippy::cargo_common_metadata",
+    "clippy::multiple_crate_versions",
 
     "clippy::missing_errors_doc",
     "clippy::new_without_default",

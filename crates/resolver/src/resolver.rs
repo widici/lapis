@@ -169,3 +169,26 @@ enum FnType {
     Fn,
     None,
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use ast::{StatementEnum, Expression, ExpressionEnum, Visitor, Statement};
+    use error::span::Span;
+    use lexer::token::Literal;
+    use crate::Resolver;
+
+    #[test]
+    fn resolver_test() {
+        let var_expr = Expression { id: 0, expr_enum: Box::new(ExpressionEnum::Var { ident: "x".to_string() }), span: Span::new(0, 0) };
+        let test_cases: Vec<Statement> = [
+            StatementEnum::VarDeclaration { ident: "x".to_string(), expr: Expression { id: 0, expr_enum: Box::new(ExpressionEnum::Literal(Literal::Int(0))), span: Span::new(0, 0) } },
+            StatementEnum::Expression(var_expr.clone()),
+        ].into_iter().map(|stmt_enum| Statement { stmt_enum: Box::new(stmt_enum), span: Span::new(0, 0) }).collect();
+
+        let mut resolver = Resolver::new();
+        assert!(resolver.resolve(test_cases).is_ok());
+        assert_eq!(resolver.side_table, HashMap::from([(var_expr, 0 as usize)]))
+    }
+}

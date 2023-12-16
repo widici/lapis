@@ -8,3 +8,7 @@ edition = "2021"
 [dependencies]
 log = "0.4.20"
 ast = { path = "../ast" }
+
+[dev-dependencies]
+error = { path = "../error" }
+lexer = { path = "../lexer" }

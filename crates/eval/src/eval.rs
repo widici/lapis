@@ -91,6 +91,7 @@ impl Evaluator {
     }
 }
 
+#[derive(PartialEq, Debug)]
 pub enum StatementErr {
     Return(StackType),
     Continue,
@@ -104,7 +105,7 @@ impl Visitor for Evaluator {
     fn visit_expr(&mut self, expr: Expression) -> Self::E {
         //println!("{:?}, {:?}-{:?}", expr.expr, expr.start, expr.end);
         match *expr.expr_enum.clone() {
-            ExpressionEnum::Literal(numeric) => StackType::Literal(numeric),
+            ExpressionEnum::Literal(literal) => StackType::Literal(literal),
             ExpressionEnum::BinOp { left, operator, right } => {
                 let (left_st, right_st) = (self.visit_expr(left), self.visit_expr(right));
                 match (left_st, right_st) {
@@ -268,5 +269,49 @@ impl Not for StackType {
             _ => unreachable!()
         };
         StackType::Literal(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use resolver::Resolver;
+    use error::span::Span;
+
+    use super::*;
+
+    #[test]
+    fn test_neg_op() {
+        assert_eq!(-StackType::Literal(Literal::Int(100)), StackType::Literal(Literal::Int(-100)));
+        assert_eq!(-StackType::Literal(Literal::Float(44.44)), StackType::Literal(Literal::Float(-44.44)));
+    }
+
+    #[test]
+    fn test_not_op() {
+        assert_eq!(!StackType::Literal(Literal::Bool(true)), StackType::Literal(Literal::Bool(false)));
+        assert_eq!(!StackType::Literal(Literal::Bool(false)), StackType::Literal(Literal::Bool(true)));
+    }
+
+    #[test]
+    fn test_pow_op() {
+        assert_eq!(3.pow(3), 27);
+        assert_eq!(2.5.pow(2.0), 6.25);
+    }
+
+    #[test]
+    fn test_visit_stmt() {
+        let resolver = Resolver::new();
+        let env = Enviroment::new(resolver);
+        let mut evaluator = Evaluator::new(env);
+        
+        let test_cases = [
+            (StatementEnum::Break, Err(StatementErr::Break)),
+            (StatementEnum::Return { expr: Expression { id: 0, expr_enum: Box::new(ExpressionEnum::Literal(Literal::Int(1))), span: Span::new(0, 0) } }, Err(StatementErr::Return(StackType::Literal(Literal::Int(1))))),
+            (StatementEnum::Continue, Err(StatementErr::Continue)),
+            (StatementEnum::Expression( Expression { id: 0, expr_enum: Box::new(ExpressionEnum::Literal(Literal::Int(1))), span: Span::new(0, 0) }), Ok(()))
+        ];
+
+        for case in test_cases {
+            assert_eq!(evaluator.visit_stmt(Statement { span: Span::new(0, 0), stmt_enum: Box::new(case.0) }), case.1)
+        }
     }
 }

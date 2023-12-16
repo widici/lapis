@@ -11,3 +11,6 @@ log = "0.4.20"
 ast = { path = "../ast" }
 lexer = { path = "../lexer" }
 resolver = { path = "../resolver" }
+
+[dev-dependencies]
+error = { path = "../error" }

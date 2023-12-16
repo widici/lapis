@@ -140,6 +140,7 @@ version = "0.1.0"
 dependencies = [
  "ast",
  "env_logger",
+ "error",
  "lexer",
  "log",
  "resolver",
@@ -345,6 +346,8 @@ name = "resolver"
 version = "0.1.0"
 dependencies = [
  "ast",
+ "error",
+ "lexer",
  "log",
 ]
 

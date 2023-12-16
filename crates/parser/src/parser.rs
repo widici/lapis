@@ -375,6 +375,27 @@ impl Parser {
     }
 }
 
+/*
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lexer::Lexer;
+
+    #[test]
+    fn test_expr_parsing() {  
+        let test_cases = ["1 + 2 * 3", "1 * 2 + 3"];
+
+        for case in test_cases {
+            let chars: Vec<char> = case.chars().collect();
+            let mut lexer = Lexer::new(chars);
+            let tokens = lexer.get_tokens();
+            let mut parser = Parser::new(tokens);
+            let result = parser.parse_expr();
+        }
+    }
+}
+*/
+
 // 3
 
 //   +  1 + | 2 * 3 |

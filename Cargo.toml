@@ -1,6 +1,7 @@
 [workspace]
-members = ["crates/*"]
+members = ["crates/*", "crates/error/macros"]
 default-members = ["crates/core"]
+resolver = "2"
 
 [workspace.dependencies.cargo-husky]
 version = "1.5"

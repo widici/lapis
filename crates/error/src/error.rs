@@ -1,23 +1,38 @@
-use crate::span::{Span, GetSpan};
+use crate::span::{Span, GetSpanTrait};
 use miette::{Diagnostic, Report};
 use thiserror::Error;
 
 pub struct Error {
     kind: ErrorKind,
-    span: Span,
+    location: ErrorLocation,
+    span: Option<Span>,
 }
 
 impl Error {
     #[must_use]
-    pub fn new(kind: ErrorKind) -> Self {
-        let span = kind.get_span();
-        Error { kind, span }
+    pub fn new(kind: ErrorKind, location: ErrorLocation) -> Self {
+        let span = kind.get_option_span();
+        Error { kind, location, span }
     }
 
     #[must_use]
     pub fn to_report(self) -> Report {
-        Report::new(self.kind).with_source_code(self.span)
+        let mut report = Report::new(self.kind);
+        match self.span {
+            Some(span) => report = report.with_source_code(span),
+            None => {},
+        }
+        report
     }
+}
+
+pub enum ErrorLocation {
+    /// Pre-processor errors such as file errors
+    Initial,
+    Lexer,
+    Parser,
+    Resolver,
+    Evaluator,
 }
 
 #[derive(Diagnostic, Error, Debug, Clone)]
@@ -31,10 +46,10 @@ pub enum ErrorKind {
     }
 }
 
-impl GetSpan for ErrorKind {
-    fn get_span(&self) -> Span {
+impl GetSpanTrait for ErrorKind {
+    fn get_option_span(&self) -> Option<Span> {
         match self {
-            ErrorKind::Unexpected { span , .. } => span.clone(),
+            ErrorKind::Unexpected { span , .. } => Some(span.clone()),
         }
     }
 }

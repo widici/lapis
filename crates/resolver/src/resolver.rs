@@ -174,7 +174,7 @@ enum FnType {
 mod tests {
     use std::collections::HashMap;
 
-    use ast::{StatementEnum, Expression, ExpressionEnum, Visitor, Statement};
+    use ast::{StatementEnum, Expression, ExpressionEnum, Statement};
     use error::span::Span;
     use lexer::token::Literal;
     use crate::Resolver;

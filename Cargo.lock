@@ -94,6 +94,7 @@ dependencies = [
  "cargo-husky",
  "env_logger",
  "error",
+ "error-macros",
  "eval",
  "lexer",
  "log",
@@ -132,6 +133,16 @@ dependencies = [
  "line-col",
  "miette",
  "thiserror",
+]
+
+[[package]]
+name = "error-macros"
+version = "0.1.0"
+dependencies = [
+ "error",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

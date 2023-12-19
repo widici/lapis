@@ -46,23 +46,15 @@ impl SourceCode for Span {
     }
 }
 
-impl From<(&Span, &Span)> for Span {
-    fn from(value: (&Span, &Span)) -> Self {
-        Span::new(value.0.start, value.1.end)
+impl From<(usize, usize)> for Span {
+    fn from(value: (usize, usize)) -> Self {
+        Span::new(value.0, value.1)
     }
 }
 
 impl From<Span> for SourceSpan {
     fn from(value: Span) -> Self {
         (value.start..value.end).into()
-        /*
-        let start: SourceOffset = SourceOffset::from_location(value.source.clone(), value.start.0, value.start.1);
-        let end: SourceOffset = SourceOffset::from_location(value.source, value.end.0, value.end.1);
-        println!("{:?} {:?}", value.start, value.end);
-        let result: SourceSpan = (start, end).into();
-        println!("{:?}", result);
-        result
-        */
     }
 }
 
@@ -72,6 +64,12 @@ impl Debug for Span {
     }
 }
 
-pub trait GetSpan {
-    fn get_span(&self) -> Span;
+pub trait GetSpanTrait {
+    fn get_span(&self) -> Span {
+        self.get_option_span().unwrap()
+    }
+
+    fn get_option_span(&self) -> Option<Span> {
+        Some(self.get_span())
+    }
 }

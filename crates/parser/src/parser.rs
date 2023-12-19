@@ -360,7 +360,7 @@ impl Parser {
     }
 
     fn get_span(&mut self) -> Span {
-        Span::new(self.get_start(), self.current_token.span.end)
+        (self.get_start(), self.current_token.span.end).into()
     }
 
     fn add_start(&mut self, start: usize) { 

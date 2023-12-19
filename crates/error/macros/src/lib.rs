@@ -1,8 +1,8 @@
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput, Data, Fields::Named, Field, FieldsNamed, DataStruct, DataEnum};
+use syn::{parse_macro_input, DeriveInput, Data, Fields::Named, Field, DataStruct, DataEnum};
 use quote::quote;
 
-#[proc_macro_derive(GetSpan)]
+#[proc_macro_derive(GetSpan, attributes(span))]
 pub fn get_span_derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let trait_impl: proc_macro2::TokenStream = generate_span_getters(&input.data, &input.ident);
@@ -22,12 +22,13 @@ fn generate_span_getters(data: &Data, ident: &syn::Ident) -> proc_macro2::TokenS
 fn generate_span_getters_struct(struct_data: &DataStruct, ident: &syn::Ident) -> proc_macro2::TokenStream {
     match &struct_data.fields {
         Named(fields) => {
-            let option_field = fields.named.iter().find(|field| {
-                if let Some(str_ident) = &field.ident {
-                    str_ident == "span"
-                } else {
-                    false
+            let option_field = fields.named.iter().find_map(|field| {
+                for attr in &field.attrs {
+                    if attr.path().is_ident("span") {
+                        return Some(field)
+                    }
                 }
+                None
             });
             return generate_fns_struct(option_field, ident)
         }
@@ -39,16 +40,18 @@ fn generate_span_getters_enum(enum_data: &DataEnum, ident: &syn::Ident) -> proc_
     let match_arms = enum_data.variants.iter().map(|variant| {
         match &variant.fields {
             Named(fields) => {
-                let mut has_span = false;
-                for field in fields.named.iter() {
-                    if let Some(str_ident) = &field.ident {
-                        has_span = str_ident == "span";
-                        break;
+                let field: Option<&syn::Ident> = fields.named.iter().find_map(|field| {
+                    for attr in &field.attrs {
+                        if attr.path().is_ident("span") {
+                            return Some(field.ident.as_ref().unwrap())
+                        }
                     }
-                }
-                generate_match_arm(has_span, ident, &variant.ident)
+                    None
+                });
+                
+                generate_match_arm(field, ident, &variant.ident)
             }
-            _ => generate_match_arm(false, ident, &variant.ident)
+            _ => generate_match_arm(None, ident, &variant.ident)
         }
     });
     
@@ -62,19 +65,19 @@ fn generate_span_getters_enum(enum_data: &DataEnum, ident: &syn::Ident) -> proc_
             }
 
             pub fn get_span(&self) -> &error::span::Span {
-                unreachable!()
+                unimplemented!()
             }
         }
     }
 }
 
-fn generate_match_arm(has_span: bool, ident: &syn::Ident, variant_ident: &syn::Ident) -> proc_macro2::TokenStream {
-    if has_span {
-        quote!{
-            #ident::#variant_ident { span, .. } => Some(span),
-        }
-    } else {
-        quote!{
+fn generate_match_arm(field: Option<&syn::Ident>, ident: &syn::Ident, variant_ident: &syn::Ident) -> proc_macro2::TokenStream {
+    println!("{:?}", field);
+    match field {
+        Some(field_ident) => quote!{
+            #ident::#variant_ident { #field_ident, .. } => Some(#field_ident),
+        },
+        None => quote!{
             #ident::#variant_ident { .. } => None,
         }
     }
@@ -84,14 +87,15 @@ fn generate_fns_struct(option_field: Option<&Field>, ident: &syn::Ident) -> proc
     match option_field {
         Some(field) => {
             let ty = &field.ty;
+            let field_ident = &field.ident;
             quote!{
                 impl #ident {
                     pub fn get_span(&self) -> &#ty {
-                        &self.span
+                        &self.#field_ident
                     }
     
                     pub fn get_option_span(&self) -> Option<&#ty> {
-                        Some(&self.span)
+                        Some(&self.#field_ident)
                     }
                 }
             }

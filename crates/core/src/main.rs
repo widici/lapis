@@ -1,12 +1,10 @@
 #[macro_use]
 extern crate log;
 
-use error_macros::GetSpan;
 use eval::{eval::Evaluator, env::Enviroment};
 use resolver::Resolver;
 use lexer::Lexer;
 use parser::Parser;
-use error::span::Span;
 
 const FILE_PATH: &str = "./test.unamned";
 

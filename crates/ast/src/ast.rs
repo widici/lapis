@@ -1,7 +1,7 @@
 use std::{hash::{Hash, Hasher}, fmt::Debug};
 
 use lexer::token::{Literal, Op};
-use error::span::Span;
+use span::Span;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Expression {

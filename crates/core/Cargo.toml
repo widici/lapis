@@ -13,7 +13,7 @@ resolver = { path = "../resolver" }
 lexer = { path = "../lexer" }
 parser = { path = "../parser" }
 error = { path = "../error" }
-error-macros = { path = "../error/macros" }
+span = { path = "../span" }
 miette = { version = "5.10.0", features = ["fancy"] }
 
 [dev-dependencies]

@@ -13,4 +13,4 @@ lexer = { path = "../lexer" }
 resolver = { path = "../resolver" }
 
 [dev-dependencies]
-error = { path = "../error" }
+span = { path = "../span" }

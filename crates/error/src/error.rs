@@ -1,4 +1,5 @@
-use crate::span::{Span, GetSpanTrait};
+use span::Span;
+use span_macros::GetSpan;
 use miette::{Diagnostic, Report};
 use thiserror::Error;
 
@@ -11,16 +12,18 @@ pub struct Error {
 impl Error {
     #[must_use]
     pub fn new(kind: ErrorKind, location: ErrorLocation) -> Self {
-        let span = kind.get_option_span();
+        let mut span = kind.get_option_span().cloned();
+        if let Some(ref mut span) = span {
+            span.get_src()
+        }
         Error { kind, location, span }
     }
 
     #[must_use]
     pub fn to_report(self) -> Report {
-        let mut report = Report::new(self.kind);
-        match self.span {
-            Some(span) => report = report.with_source_code(span),
-            None => {},
+        let report = Report::new(self.kind);
+        if let Some(span) = self.span {
+            return report.with_source_code(span)
         }
         report
     }
@@ -35,21 +38,14 @@ pub enum ErrorLocation {
     Evaluator,
 }
 
-#[derive(Diagnostic, Error, Debug, Clone)]
+#[derive(Diagnostic, Error, Debug, Clone, GetSpan)]
 pub enum ErrorKind {
     #[error("Found unexpected: {}, expected: {}", found, expected)]
     Unexpected {
         expected: String,
         found: String,
         #[label]
+        #[span]
         span: Span,
-    }
-}
-
-impl GetSpanTrait for ErrorKind {
-    fn get_option_span(&self) -> Option<Span> {
-        match self {
-            ErrorKind::Unexpected { span , .. } => Some(span.clone()),
-        }
     }
 }

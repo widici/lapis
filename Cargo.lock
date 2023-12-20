@@ -31,9 +31,9 @@ name = "ast"
 version = "0.1.0"
 dependencies = [
  "env_logger",
- "error",
  "lexer",
  "log",
+ "span",
 ]
 
 [[package]]
@@ -94,13 +94,13 @@ dependencies = [
  "cargo-husky",
  "env_logger",
  "error",
- "error-macros",
  "eval",
  "lexer",
  "log",
  "miette",
  "parser",
  "resolver",
+ "span",
 ]
 
 [[package]]
@@ -132,17 +132,9 @@ version = "0.1.0"
 dependencies = [
  "line-col",
  "miette",
+ "span",
+ "span-macros",
  "thiserror",
-]
-
-[[package]]
-name = "error-macros"
-version = "0.1.0"
-dependencies = [
- "error",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -151,10 +143,10 @@ version = "0.1.0"
 dependencies = [
  "ast",
  "env_logger",
- "error",
  "lexer",
  "log",
  "resolver",
+ "span",
 ]
 
 [[package]]
@@ -197,9 +189,9 @@ name = "lexer"
 version = "0.1.0"
 dependencies = [
  "env_logger",
- "error",
  "log",
  "miette",
+ "span",
 ]
 
 [[package]]
@@ -300,9 +292,9 @@ version = "0.1.0"
 dependencies = [
  "ast",
  "env_logger",
- "error",
  "lexer",
  "log",
+ "span",
 ]
 
 [[package]]
@@ -357,9 +349,9 @@ name = "resolver"
 version = "0.1.0"
 dependencies = [
  "ast",
- "error",
  "lexer",
  "log",
+ "span",
 ]
 
 [[package]]
@@ -386,6 +378,24 @@ name = "smawk"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7c388c1b5e93756d0c740965c41e8822f866621d41acbdf6336a6a168f8840c"
+
+[[package]]
+name = "span"
+version = "0.1.0"
+dependencies = [
+ "line-col",
+ "miette",
+]
+
+[[package]]
+name = "span-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "span",
+ "syn",
+]
 
 [[package]]
 name = "supports-color"

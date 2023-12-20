@@ -1,4 +1,4 @@
-use error::span::Span;
+use span::Span;
 use std::cmp::Ordering;
 use std::mem::discriminant;
 

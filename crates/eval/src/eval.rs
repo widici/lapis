@@ -275,7 +275,7 @@ impl Not for StackType {
 #[cfg(test)]
 mod tests {
     use resolver::Resolver;
-    use error::span::Span;
+    use span::Span;
 
     use super::*;
 

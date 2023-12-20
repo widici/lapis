@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use ast::{Expression, Statement, ExpressionEnum, StatementEnum};
 use lexer::token::{Op, TokenType, Token};
-use error::span::Span;
+use span::Span;
 
 pub struct Parser {
     tokens: Vec<Token>,

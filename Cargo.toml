@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/*", "crates/error/macros"]
+members = ["crates/*", "crates/span/macros"]
 default-members = ["crates/core"]
 resolver = "2"
 

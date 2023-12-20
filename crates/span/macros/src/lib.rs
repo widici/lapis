@@ -57,14 +57,14 @@ fn generate_span_getters_enum(enum_data: &DataEnum, ident: &syn::Ident) -> proc_
     
     quote!{
         impl #ident {
-            pub fn get_option_span(&self) -> Option<&error::span::Span> {
+            pub fn get_option_span(&self) -> Option<&span::Span> {
                 match self {
                     #( #match_arms )*
                     _ => None
                 }
             }
 
-            pub fn get_span(&self) -> &error::span::Span {
+            pub fn get_span(&self) -> &span::Span {
                 unimplemented!()
             }
         }
@@ -103,11 +103,11 @@ fn generate_fns_struct(option_field: Option<&Field>, ident: &syn::Ident) -> proc
         None => {
             quote!{
                 impl #ident {
-                    pub fn get_span(&self) -> &error::span::Span {
+                    pub fn get_span(&self) -> &span::Span {
                         unreachable!()
                     }
 
-                    pub fn get_option_span(&self) -> Option<&error::span::Span> {
+                    pub fn get_option_span(&self) -> Option<&span::Span> {
                         None
                     }
                 }

@@ -1,7 +1,7 @@
 use crate::token::{Token, TokenType};
 use crate::token::Literal::{Float, Int, Bool, Str, Char};
 use crate::token::Op::{Div, Sub, Mul, Add, Pow, Rem, Eq, EqEq, Ne, Gt, Lt, Ge, Le, And, Or, Not};
-use error::span::Span;
+use span::Span;
 
 pub struct Lexer {
     input: Vec<char>,

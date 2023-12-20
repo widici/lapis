@@ -27,7 +27,7 @@ impl Span {
         self.get_line_col().0.0 == other.get_line_col().1.0
     }
 
-    fn get_src(&mut self) {
+    pub fn get_src(&mut self) {
         if self.source.is_none() {
             self.source = Some(read_to_string("./test.unamned").unwrap())
         }
@@ -61,15 +61,5 @@ impl From<Span> for SourceSpan {
 impl Debug for Span {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}..{:?}", self.start, self.end)
-    }
-}
-
-pub trait GetSpanTrait {
-    fn get_span(&self) -> Span {
-        self.get_option_span().unwrap()
-    }
-
-    fn get_option_span(&self) -> Option<Span> {
-        Some(self.get_span())
     }
 }

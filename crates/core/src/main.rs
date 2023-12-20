@@ -10,7 +10,7 @@ const FILE_PATH: &str = "./test.unamned";
 
 fn main() {
     env_logger::init();
-    
+
     let chars: Vec<char> = match std::fs::read_to_string(FILE_PATH) {
         Ok(src) => src.chars().collect(),
         Err(_) => unimplemented!(),

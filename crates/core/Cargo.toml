@@ -14,7 +14,7 @@ lexer = { path = "../lexer" }
 parser = { path = "../parser" }
 error = { path = "../error" }
 span = { path = "../span" }
-miette = { version = "5.10.0", features = ["fancy"] }
+miette = "5.10.0"
 
 [dev-dependencies]
 cargo-husky.workspace = true

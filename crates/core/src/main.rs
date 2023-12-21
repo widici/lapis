@@ -5,6 +5,8 @@ use eval::{eval::Evaluator, env::Enviroment};
 use resolver::Resolver;
 use lexer::Lexer;
 use parser::Parser;
+use error::{impl_error_handling, Error, ErrorLocation::Initial};
+use span::Span;
 
 const FILE_PATH: &str = "./test.unamned";
 

@@ -3,6 +3,7 @@ use span_macros::GetSpan;
 use miette::{Diagnostic, Report};
 use thiserror::Error;
 
+#[derive(Clone)]
 pub struct Error {
     kind: ErrorKind,
     location: ErrorLocation,
@@ -29,6 +30,7 @@ impl Error {
     }
 }
 
+#[derive(Clone)]
 pub enum ErrorLocation {
     /// Pre-processor errors such as file errors
     Initial,

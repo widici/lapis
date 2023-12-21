@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 line-col = "0.2.1"
-miette = "5.10.0"
+miette = { version = "5.10.0", features = ["fancy"] }
 thiserror = "1.0.50"
 span = { path = "../span" }
 span-macros = { path = "../span/macros" }

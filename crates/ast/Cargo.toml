@@ -10,3 +10,4 @@ env_logger = "0.10.0"
 log = "0.4.20"
 lexer = { path = "../lexer" }
 span = { path = "../span" }
+span-macros = { path = "../span/macros" }

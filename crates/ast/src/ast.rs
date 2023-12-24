@@ -2,10 +2,12 @@ use std::{hash::{Hash, Hasher}, fmt::Debug};
 
 use lexer::token::{Literal, Op};
 use span::Span;
+use span_macros::GetSpan;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, GetSpan)]
 pub struct Expression {
     pub expr_enum: Box<ExpressionEnum>,
+    #[span]
     pub span: Span,
     /// This limits the amount of exprs in one program based on the target
     /// E.g. on 2 ^ 64 - 1 on 64-bit targets
@@ -37,9 +39,10 @@ pub enum ExpressionEnum {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, GetSpan)]
 pub struct Statement {
     pub stmt_enum: Box<StatementEnum>,
+    #[span]
     pub span: Span,
 }
 

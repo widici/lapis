@@ -300,7 +300,8 @@ mod tests {
     #[test]
     fn test_visit_stmt() {
         let resolver = Resolver::new();
-        let env = Enviroment::new(resolver);
+        let side_table = resolver.resolve(vec![]);
+        let env = Enviroment::new(side_table);
         let mut evaluator = Evaluator::new(env);
         
         let test_cases = [

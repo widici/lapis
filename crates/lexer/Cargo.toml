@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 env_logger = "0.10.0"
 log = "0.4.20"
-miette = "5.10.0"
 span = { path = "../span" }
+error = { path = "../error" }

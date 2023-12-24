@@ -46,6 +46,12 @@ impl SourceCode for Span {
     }
 }
 
+impl From<usize> for Span {
+    fn from(value: usize) -> Self {
+        Span::new(value, value)
+    }
+}
+
 impl From<(usize, usize)> for Span {
     fn from(value: (usize, usize)) -> Self {
         Span::new(value.0, value.1)

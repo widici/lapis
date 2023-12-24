@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! impl_error_handling {
-    ($ident:ident, $location:ident) => {
+    ($ident:ident, $location:path) => {
         impl $ident {
             fn add_error(&mut self, kind: error::ErrorKind) {
                 self.errors.push(Error::new(kind, $location))
@@ -12,9 +12,9 @@ macro_rules! impl_error_handling {
                 }
 
                 for error in self.errors.clone() {
-                    print!("{:?}", error.to_report())
+                    eprint!("{:?}", error.to_report())
                 }
-                std::process::exit(0)
+                std::process::exit(1)
             }
         }
     };

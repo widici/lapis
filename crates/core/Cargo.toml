@@ -12,9 +12,7 @@ eval = { path = "../eval" }
 resolver = { path = "../resolver" }
 lexer = { path = "../lexer" }
 parser = { path = "../parser" }
-error = { path = "../error" }
-span = { path = "../span" }
-miette = "5.10.0"
+clap = { version = "4.4.11", features = ["derive"] }
 
 [dev-dependencies]
 cargo-husky.workspace = true

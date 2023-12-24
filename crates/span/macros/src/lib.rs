@@ -72,7 +72,6 @@ fn generate_span_getters_enum(enum_data: &DataEnum, ident: &syn::Ident) -> proc_
 }
 
 fn generate_match_arm(field: Option<&syn::Ident>, ident: &syn::Ident, variant_ident: &syn::Ident) -> proc_macro2::TokenStream {
-    println!("{:?}", field);
     match field {
         Some(field_ident) => quote!{
             #ident::#variant_ident { #field_ident, .. } => Some(#field_ident),

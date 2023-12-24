@@ -1,20 +1,23 @@
 use crate::token::{Token, TokenType};
 use crate::token::Literal::{Float, Int, Bool, Str, Char};
 use crate::token::Op::{Div, Sub, Mul, Add, Pow, Rem, Eq, EqEq, Ne, Gt, Lt, Ge, Le, And, Or, Not};
+use error::Error;
 use span::Span;
+use error::{impl_error_handling, ErrorLocation, ErrorKind::IllegalChar, ErrorKind::Unclosed};
 
 pub struct Lexer {
     input: Vec<char>,
     current_pos: usize,
     current_char: char,
-    current_line: usize,
-    current_col: usize,
+    errors: Vec<Error>
 }
+
+impl_error_handling!(Lexer, ErrorLocation::Lexer);
 
 impl Lexer {
     #[must_use]
     pub fn new(input: Vec<char>) -> Lexer {
-        let mut lexer: Lexer = Lexer { input, current_pos: 0, current_char: '\0', current_line: 1, current_col: 1 };
+        let mut lexer: Lexer = Lexer { input, current_pos: 0, current_char: '\0', errors: Vec::new() };
         lexer.current_char = lexer.get_current_char();
         lexer
     }
@@ -84,19 +87,9 @@ impl Lexer {
             ',' => TokenType::Comma,
             '"' => self.get_string(),
             '\'' => self.get_char(),
-            ' ' => {
-                self.current_col += 1;
+            ' ' | '\n' | '\t' => {
                 return None
             },
-            '\t' => {
-                self.current_col += 4;
-                return None
-            }
-            '\n' => {
-                self.current_line += 1;
-                self.current_col = 1;
-                return None
-            }
             '{' => TokenType::LCurly,
             '}' => TokenType::RCurly,
             v => {
@@ -105,7 +98,8 @@ impl Lexer {
                 } else if v.is_ascii_alphabetic() {
                     self.get_identifier()
                 } else {
-                    TokenType::Illegal{pos: self.current_pos, char: self.current_char}
+                    self.add_error(IllegalChar { found: *v, span: self.current_pos.into() });
+                    return None
                 }
             }
         })
@@ -115,7 +109,6 @@ impl Lexer {
         let start = self.current_pos;
         while (self.peek_char().is_ascii_alphabetic() || self.peek_char() == '_') && self.current_char != '\0' {
             self.advance();
-            self.current_col += 1;
         }
 
         let ident: String = self.input[start..=self.current_pos].iter().collect();
@@ -147,7 +140,6 @@ impl Lexer {
             }
 
             self.advance();
-            self.current_col += 1;
         }
 
         match int_str.contains('.') {
@@ -162,23 +154,26 @@ impl Lexer {
     }
 
     fn get_string(&mut self) -> TokenType {
+        let start = self.current_pos;
         self.advance();
         //self.current_col += 1;
         let mut str = String::new();
         while self.current_char != '"' {
             str.push(self.current_char);
             if self.peek_char() == '\0' {
-                break;
+                self.add_error(Unclosed { ty: "str", start: start.into() });
+                self.report_errors();
             }
             self.advance();
-            self.current_col += 1;
         }
         TokenType::Literal(Str(str))
     }
 
     fn get_char(&mut self) -> TokenType {
         self.advance();
-        assert_eq!(self.peek_char(), '\'');
+        if self.peek_char() != '\'' {
+            self.add_error(Unclosed { ty: "char", start: (self.current_pos - 1).into() })
+        }
         TokenType::Literal(Char(self.current_char))
     }
 
@@ -190,6 +185,7 @@ impl Lexer {
     }
 
     fn lex_block_comment(&mut self) -> Option<TokenType> {
+        let start = self.current_pos;
         while !(self.get_current_char() == '*' && self.peek_char() == '/') {
             let result = match self.get_current_char() {
                 '\n' | '\0' => self.get_token(),
@@ -197,6 +193,7 @@ impl Lexer {
             };
 
             if result == Some(TokenType::EOF) {
+                self.add_error(Unclosed { ty: "block-comment", start: start.into() });
                 return result
             }
 
@@ -211,7 +208,7 @@ impl Lexer {
         let mut tokens: Vec<Token> = Vec::new();
 
         loop {
-            let start = self.current_col;
+            let start = self.current_pos;
             let token = self.get_token();
 
             match token {
@@ -220,7 +217,7 @@ impl Lexer {
                     //info!("{:?} {:?} {:?}", self.get_current_char(), self.current_pos, tt);
                     let span = Span::new(start, self.current_pos);
                     tokens.push(Token::new(tt, span));
-                    self.current_col += 1;
+                    //self.current_col += 1;
                 }
             }
 
@@ -230,6 +227,7 @@ impl Lexer {
             self.advance()
         }
 
+        self.report_errors();
         tokens
     }
 }

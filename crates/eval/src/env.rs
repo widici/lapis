@@ -2,7 +2,6 @@ use log::info;
 use std::collections::{HashMap, hash_map::Entry::{Vacant, Occupied}};
 use lexer::token::Literal;
 use ast::{ast::Statement, Expression};
-use resolver::Resolver;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum StackType {
@@ -17,7 +16,7 @@ pub enum StackType {
 
 pub struct Enviroment {
     pub(crate) nodes: Vec<EnviromentNode>,
-    resolver: Resolver,
+    side_table: HashMap<Expression, usize>,
     /// This is used in scenarios where the current env id isn't the last node
     /// E.g. during fn calls, where the current scope needs to move to be below the fn decl
     pub(crate) env_ptr: Option<usize>
@@ -25,8 +24,8 @@ pub struct Enviroment {
 
 impl Enviroment {
     #[must_use]
-    pub const fn new(resolver: Resolver) -> Self {
-        Enviroment { nodes: Vec::new(), resolver, env_ptr: None }
+    pub const fn new(side_table: HashMap<Expression, usize>) -> Self {
+        Enviroment { nodes: Vec::new(), side_table, env_ptr: None }
     }
 
     fn get_current_env_id(&self) -> usize {
@@ -86,7 +85,7 @@ impl Enviroment {
     }
 
     fn get_env_id(&self, expr: &Expression) -> usize {
-        match self.resolver.side_table.get(expr) {
+        match self.side_table.get(expr) {
             Some(distance) => {
                 //log!("Expected from {:?} @ {:?} @ pos {:?}", expr, distance, self.nodes.len() - 1);
                 let current_pos = self.env_ptr.unwrap_or(self.nodes.len() - 1);

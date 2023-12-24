@@ -9,5 +9,6 @@ edition = "2021"
 line-col = "0.2.1"
 miette = { version = "5.10.0", features = ["fancy"] }
 thiserror = "1.0.50"
+#ast = { path = "../ast" }
 span = { path = "../span" }
 span-macros = { path = "../span/macros" }

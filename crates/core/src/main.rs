@@ -1,22 +1,27 @@
 #[macro_use]
 extern crate log;
-
+mod args;
 use eval::{eval::Evaluator, env::Enviroment};
 use resolver::Resolver;
 use lexer::Lexer;
 use parser::Parser;
-use error::{impl_error_handling, Error, ErrorLocation::Initial};
-use span::Span;
-
-const FILE_PATH: &str = "./test.unamned";
+use std::fs::File;
+use std::io::Read;
 
 fn main() {
     env_logger::init();
 
-    let chars: Vec<char> = match std::fs::read_to_string(FILE_PATH) {
-        Ok(src) => src.chars().collect(),
-        Err(_) => unimplemented!(),
+    let args = args::parse();
+    let mut file = match File::open(&args.path) {
+        Ok(file) => file,
+        Err(_) => unimplemented!()
     };
+
+    let mut contents = String::new();
+    if file.read_to_string(&mut contents).is_err() {
+        unimplemented!()
+    }
+    let chars: Vec<char> = contents.chars().collect();
 
     let mut lexer = Lexer::new(chars);
     let tokens = lexer.get_tokens();
@@ -25,11 +30,11 @@ fn main() {
     let stmts = parser.parse();
     info!("Parsed: {:?}", stmts);
 
-    let mut resolver = Resolver::new();
-    let _ = resolver.resolve(stmts.clone());
-    info!("Resolved side-table: {:?}", resolver.side_table);
+    let resolver = Resolver::new();
+    let side_table = resolver.resolve(stmts.clone());
+    info!("Resolved side-table: {:?}", side_table);
 
-    let env = Enviroment::new(resolver);
+    let env = Enviroment::new(side_table);
     let mut evaluator = Evaluator::new(env);
 
     let _ = evaluator.evaluate(stmts);

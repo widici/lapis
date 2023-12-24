@@ -49,5 +49,35 @@ pub enum ErrorKind {
         #[label]
         #[span]
         span: Span,
+    },
+    #[error("Found Illegal char: {}", found)]
+    IllegalChar {
+        found: char,
+        #[label]
+        #[span]
+        span: Span,
+    },
+    #[error("Unclosed {} found starting:", ty)]
+    Unclosed {
+        ty: &'static str,
+        #[label]
+        #[span]
+        start: Span,
+    },
+    #[error("Statement: {} used in an unexpected context", stmt)]
+    StmtUnexpectedContext {
+        // TODO: replace this with StatementEnum
+        stmt: String,
+        #[label]
+        #[span]
+        span: Span,
+    },
+    #[error("{} is already defined in the scope", ident)]
+    Redefenition {
+        ident: String
+    },
+    #[error("{} can't be found", ident)]
+    NotFound {
+        ident: String
     }
 }

@@ -2,10 +2,10 @@ use span::Span;
 use std::cmp::Ordering;
 use std::mem::discriminant;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     pub tt: TokenType,
-    pub span: Span
+    pub span: Span,
 }
 
 impl Token {
@@ -13,14 +13,27 @@ impl Token {
     pub const fn new(tt: TokenType, span: Span) -> Self {
         Token { tt, span }
     }
+
+    pub fn get_str_ident(&self) -> &String {
+        match &self.tt {
+            TokenType::Ident(ident) => ident,
+            _ => unreachable!("Expected tt ident"),
+        }
+    }
+}
+
+impl From<Token> for Op {
+    fn from(value: Token) -> Self {
+        match value.tt {
+            TokenType::Op(op) => op,
+            _ => unreachable!("Expected tt op"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
-    Illegal {
-        pos: usize,
-        char: char
-    },
+    Illegal { pos: usize, char: char },
     EOF,
     Ident(String),
     Op(Op),
@@ -61,7 +74,7 @@ impl PartialEq for Literal {
     fn eq(&self, other: &Self) -> bool {
         match (&self.get_bool(), &other.get_bool()) {
             (Some(self_bool), Some(other_bool)) => self_bool == other_bool,
-            _ => discriminant(self) == discriminant(other)
+            _ => discriminant(self) == discriminant(other),
         }
     }
 }
@@ -98,12 +111,11 @@ pub enum Op {
     PowEq,
     RemEq,
     */
-
     // Comparison
     EqEq,
     Ne,
     Gt, // Greater than
-    Lt, // Lesser than 
+    Lt, // Lesser than
     Ge, // Greater than or equal to
     Le, // Lesser than or equal to
     And,
@@ -114,13 +126,13 @@ impl Op {
     #[must_use]
     pub const fn get_precedence(&self) -> u8 {
         match &self {
-            Op::Eq => 0, // Eq
-            Op::Or => 1, // Or
-            Op::And => 2, // And
-            Op::Add | Op::Sub => 4, // Term
+            Op::Eq => 0,                      // Eq
+            Op::Or => 1,                      // Or
+            Op::And => 2,                     // And
+            Op::Add | Op::Sub => 4,           // Term
             Op::Mul | Op::Div | Op::Rem => 5, // Factor
-            Op::Pow => 6, // Caret
-            Op::Not  => 7,
+            Op::Pow => 6,                     // Caret
+            Op::Not => 7,
             _ => 3,
         }
     }

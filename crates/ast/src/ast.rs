@@ -1,6 +1,9 @@
-use std::{hash::{Hash, Hasher}, fmt::Debug};
+use std::{
+    fmt::Debug,
+    hash::{Hash, Hasher},
+};
 
-use lexer::token::{Literal, Op};
+use lexer::token::{Literal, Op, Token};
 use span::Span;
 use span_macros::GetSpan;
 
@@ -16,27 +19,27 @@ pub struct Expression {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExpressionEnum {
-    Literal(Literal),
+    Literal(Token),
     BinOp {
         left: Expression,
-        operator: Op,
+        operator: Token,
         right: Expression,
     },
     UnaryOp {
-        operator: Op,
+        operator: Token,
         expr: Expression,
     },
     Var {
-        ident: String
+        ident: Token,
     },
     Assignment {
-        ident: String,
+        ident: Token,
         right: Expression,
     },
     Call {
-        ident: String,
-        params: Vec<Expression>
-    }
+        ident: Token,
+        params: Vec<Expression>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, GetSpan)]
@@ -50,19 +53,19 @@ pub struct Statement {
 pub enum StatementEnum {
     Expression(Expression),
     VarDeclaration {
-        ident: String,
-        expr: Expression
+        ident: Token,
+        expr: Expression,
     },
     FnDeclaration {
-        ident: String,
-        params: Vec<String>,
+        ident: Token,
+        params: Vec<Token>,
         stmts: Vec<Statement>,
     },
     Block {
-        stmts: Vec<Statement>
+        stmts: Vec<Statement>,
     },
     Return {
-        expr: Expression
+        expr: Expression,
     },
     If {
         if_branch: (Expression, Statement),

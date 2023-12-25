@@ -1,18 +1,22 @@
-use miette::{SourceSpan, SourceCode};
 use line_col::LineColLookup;
-use std::{fs::read_to_string, fmt::Debug};
+use miette::{SourceCode, SourceSpan};
+use std::{fmt::Debug, fs::read_to_string};
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
-    source: Option<String>
+    source: Option<String>,
 }
 
 impl Span {
     #[must_use]
     pub fn new(start: usize, end: usize) -> Self {
-        Self { start, end, source: None }
+        Self {
+            start,
+            end,
+            source: None,
+        }
     }
 
     #[must_use]
@@ -24,7 +28,7 @@ impl Span {
 
     #[must_use]
     pub fn comp_line_col(&mut self, other: &mut Self) -> bool {
-        self.get_line_col().0.0 == other.get_line_col().1.0
+        self.get_line_col().0 .0 == other.get_line_col().1 .0
     }
 
     pub fn get_src(&mut self) {
@@ -36,13 +40,13 @@ impl Span {
 
 impl SourceCode for Span {
     fn read_span<'a>(
-            &'a self,
-            _span: &SourceSpan,
-            _context_lines_before: usize,
-            _context_lines_after: usize,
-        ) -> Result<Box<dyn miette::SpanContents<'a> + 'a>, miette::MietteError> {
-            let span: SourceSpan = (self.clone()).into();
-            self.source.as_ref().unwrap().read_span(&span, 1, 1)
+        &'a self,
+        _span: &SourceSpan,
+        _context_lines_before: usize,
+        _context_lines_after: usize,
+    ) -> Result<Box<dyn miette::SpanContents<'a> + 'a>, miette::MietteError> {
+        let span: SourceSpan = (self.clone()).into();
+        self.source.as_ref().unwrap().read_span(&span, 1, 1)
     }
 }
 

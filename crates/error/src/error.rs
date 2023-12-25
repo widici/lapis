@@ -1,6 +1,6 @@
+use miette::{Diagnostic, Report};
 use span::Span;
 use span_macros::GetSpan;
-use miette::{Diagnostic, Report};
 use thiserror::Error;
 
 #[derive(Clone)]
@@ -17,14 +17,18 @@ impl Error {
         if let Some(ref mut span) = span {
             span.get_src()
         }
-        Error { kind, location, span }
+        Error {
+            kind,
+            location,
+            span,
+        }
     }
 
     #[must_use]
     pub fn to_report(self) -> Report {
         let report = Report::new(self.kind);
         if let Some(span) = self.span {
-            return report.with_source_code(span)
+            return report.with_source_code(span);
         }
         report
     }
@@ -73,11 +77,7 @@ pub enum ErrorKind {
         span: Span,
     },
     #[error("{} is already defined in the scope", ident)]
-    Redefenition {
-        ident: String
-    },
+    Redefenition { ident: String },
     #[error("{} can't be found", ident)]
-    NotFound {
-        ident: String
-    }
+    NotFound { ident: String },
 }

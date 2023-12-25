@@ -1,6 +1,6 @@
-use ast::Statement;
 use crate::env::StackType;
 use crate::eval::{Evaluator, StatementErr};
+use ast::Statement;
 
 pub trait Callable {
     fn arity(&self) -> usize;
@@ -22,7 +22,7 @@ impl Callable for Function {
         if self.arity() != params.len() {
             unimplemented!()
         }
-        
+
         evaluator.env.env_ptr = Some(self.env_id);
         evaluator.env.new_node(); // Begining of execution of fn stmts
 
@@ -30,7 +30,7 @@ impl Callable for Function {
             evaluator.env.declare(ident, value)
         }
         let fn_return = evaluator.evaluate(self.stmts.clone());
-    
+
         evaluator.env.drop(); // End of execution of fn stmts
         evaluator.env.env_ptr = None;
 
@@ -38,8 +38,8 @@ impl Callable for Function {
             Ok(()) => StackType::Undefined,
             Err(e) => match e {
                 StatementErr::Return(stack_type) => stack_type,
-                _ => unreachable!()
-            }
+                _ => unreachable!(),
+            },
         }
     }
 }
@@ -47,10 +47,16 @@ impl Callable for Function {
 impl From<StackType> for Function {
     fn from(value: StackType) -> Self {
         match value {
-            StackType::Function { params, stmts, env_id } => {
-                Self { params, stmts, env_id }
+            StackType::Function {
+                params,
+                stmts,
+                env_id,
+            } => Self {
+                params,
+                stmts,
+                env_id,
             },
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 }

@@ -1,7 +1,7 @@
-use std::cmp::Ordering;
-use ast::{Expression, Statement, ExpressionEnum, StatementEnum};
-use lexer::token::{Op, TokenType, Token};
+use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
+use lexer::token::{Op, Token, TokenType};
 use span::Span;
+use std::{clone, cmp::Ordering};
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -15,7 +15,13 @@ impl Parser {
     #[must_use]
     pub fn new(tokens: Vec<Token>) -> Parser {
         let current_token = Token::new(TokenType::EOF, Span::new(0, 0));
-        let mut parser = Parser { tokens, current_pos: 0, current_token, start_stack: Vec::new(), current_expr_id: 0 };
+        let mut parser = Parser {
+            tokens,
+            current_pos: 0,
+            current_token,
+            start_stack: Vec::new(),
+            current_expr_id: 0,
+        };
         parser.current_token = parser.get_token();
         parser
     }
@@ -32,14 +38,14 @@ impl Parser {
                 TokenType::RCurly => {
                     //self.advance(); // Consumes the rcurly
                     if is_inner {
-                        break
+                        break;
                     }
                     unimplemented!()
-                },
-                _ => { 
+                }
+                _ => {
                     stmts.push(self.parse_stmt());
                     //self.advance();
-                },
+                }
             }
         }
         //println!("Returns: {:?}", self.current_token);
@@ -58,24 +64,28 @@ impl Parser {
                 } else if let Some(token) = self.peek_token() {
                     if token.tt == TokenType::LParen {
                         StatementEnum::Expression(self.parse_call())
-                    } else { unimplemented!() }
-                } else { unimplemented!() }
-            },
+                    } else {
+                        unimplemented!()
+                    }
+                } else {
+                    unimplemented!()
+                }
+            }
             TokenType::Return => {
                 self.advance();
-                StatementEnum::Return { expr: self.parse_expr() }
+                StatementEnum::Return {
+                    expr: self.parse_expr(),
+                }
             }
             TokenType::Fn => self.parse_fn_decl(),
             TokenType::If => self.parse_if(),
             TokenType::While => self.parse_while(),
             TokenType::Break => StatementEnum::Break,
             TokenType::Continue => StatementEnum::Continue,
-            _ => {
-                StatementEnum::Expression(self.parse_expr())
-            }
+            _ => StatementEnum::Expression(self.parse_expr()),
         };
         let result = self.construct_stmt(stmt);
-        
+
         self.advance();
         result
     }
@@ -85,7 +95,9 @@ impl Parser {
         loop {
             match self.tokens[self.current_pos + count].tt {
                 //TokenType::ILLEGAL { .. } => {}
-                TokenType::EOF | TokenType::Comma | TokenType::RParen | TokenType::RCurly => return None,
+                TokenType::EOF | TokenType::Comma | TokenType::RParen | TokenType::RCurly => {
+                    return None
+                }
                 TokenType::Op(op) => return Some(op),
                 _ => count += 1,
             }
@@ -109,10 +121,10 @@ impl Parser {
         self.current_token = self.get_token()
     }
 
-    fn parse_ident(&mut self) -> String {
-        let ident = match self.get_token().tt {
-            TokenType::Ident(ident) => ident,
-            other => panic!("{:?}", other)
+    fn parse_ident(&mut self) -> Token {
+        let ident = match &self.current_token.tt {
+            TokenType::Ident(_) => self.current_token.clone(),
+            _ => unimplemented!(),
         };
         self.advance();
         ident
@@ -133,29 +145,36 @@ impl Parser {
         self.add_start(self.current_token.span.start);
         let ident = self.parse_ident();
 
-        let operator = match self.get_token().tt {
+        let operator = match self.current_token.tt {
             TokenType::Op(op) => match op {
-                Op::Eq => Op::Eq,
-                other => {
+                Op::Eq => self.get_token(),
+                _ => {
+                    let token = self.get_token();
                     self.advance(); // Consumes the eq
                     assert_eq!(self.current_token.tt, TokenType::Op(Op::Eq));
-                    other
+                    token
                 }
             },
-            _ => unimplemented!()
+            _ => unimplemented!(),
         };
         self.advance();
 
         let left = self.parse_expr();
         // x op= 10 -> x = x op 10
-        let right = match operator {
-            Op::Eq => left,
+        let right = match operator.tt {
+            TokenType::Op(Op::Eq) => left,
             _ => {
                 // Temporary solution
                 self.add_start(left.span.start); // Push for right
                 self.add_start(left.span.start); // Push for expr
-                let right = self.construct_expr(ExpressionEnum::Var { ident: ident.clone() });
-                let expr = ExpressionEnum::BinOp { left, operator, right };
+                let right = self.construct_expr(ExpressionEnum::Var {
+                    ident: ident.clone(),
+                });
+                let expr = ExpressionEnum::BinOp {
+                    left,
+                    operator,
+                    right,
+                };
                 self.construct_expr(expr)
             }
         };
@@ -165,7 +184,9 @@ impl Parser {
     fn parse_block(&mut self) -> StatementEnum {
         assert_eq!(self.current_token.tt, TokenType::LCurly);
         self.advance(); // Consumes the lcurly
-        StatementEnum::Block { stmts: self.parse_inner(true) }
+        StatementEnum::Block {
+            stmts: self.parse_inner(true),
+        }
     }
 
     fn parse_fn_decl(&mut self) -> StatementEnum {
@@ -175,14 +196,14 @@ impl Parser {
         assert_eq!(self.current_token.tt, TokenType::LParen);
         self.advance(); // Consumes the lparen
 
-        let mut params: Vec<String> = Vec::new();
+        let mut params: Vec<Token> = Vec::new();
         while ![TokenType::RParen, TokenType::EOF].contains(&self.current_token.tt) {
             let ident = self.parse_ident();
-            
+
             match &self.current_token.tt {
                 TokenType::Comma => self.advance(),
-                TokenType::RParen => {},
-                _ => unimplemented!()
+                TokenType::RParen => {}
+                _ => unimplemented!(),
             }
 
             if params.contains(&ident) {
@@ -192,12 +213,16 @@ impl Parser {
             params.push(ident)
         }
         self.advance(); // Consume the rparen
-        
+
         self.add_start(self.current_token.span.start);
         self.advance(); // Consumes the lparen
         let stmts = self.parse_inner(true);
         //info!("{:?}", block);
-        StatementEnum::FnDeclaration { ident, params, stmts }
+        StatementEnum::FnDeclaration {
+            ident,
+            params,
+            stmts,
+        }
     }
 
     fn parse_if(&mut self) -> StatementEnum {
@@ -215,9 +240,15 @@ impl Parser {
             self.add_start(self.current_token.span.start);
             let block = self.parse_block();
             Some(self.construct_stmt(block))
-        } else { None };
+        } else {
+            None
+        };
 
-        StatementEnum::If { if_branch, elif_branches, else_branch }
+        StatementEnum::If {
+            if_branch,
+            elif_branches,
+            else_branch,
+        }
     }
 
     fn parse_cond_branch(&mut self) -> (Expression, Statement) {
@@ -253,44 +284,49 @@ impl Parser {
             self.advance();
             if self.current_token.tt != TokenType::RParen {
                 self.advance()
-            }   
+            }
         }
 
         self.construct_expr(ExpressionEnum::Call { ident, params })
     }
 
     fn parse_operand(&mut self) -> Expression {
-        match &self.get_token().tt {
-            TokenType::Literal(literal) => {
-                self.add_start(self.current_token.span.start);
-                
-                self.construct_expr(ExpressionEnum::Literal(literal.to_owned()))
-            },
+        match &self.current_token.tt {
+            TokenType::Literal(_) => {
+                let literal = self.get_token();
+                self.add_start(self.get_token().span.start);
+                self.construct_expr(ExpressionEnum::Literal(literal))
+            }
             TokenType::LParen => {
                 self.advance(); // Consumes the lparen
                 let expr_result = self.parse_expr();
                 self.advance();
                 expr_result
-            },
+            }
             TokenType::Op(op) => match op {
                 Op::Sub | Op::Not => {
+                    let operator = self.get_token();
                     self.add_start(self.current_token.span.start);
                     self.advance(); // Consume the sub/not
                     let expr = self.parse_operand();
-                    self.construct_expr(ExpressionEnum::UnaryOp { operator: *op, expr })
+                    self.construct_expr(ExpressionEnum::UnaryOp { operator, expr })
                 }
-                _ => unimplemented!()
-            },  
-            TokenType::Ident(name) => {
-                if let Some(Token { tt: TokenType::LParen, .. }) = self.peek_token() {
-                    self.parse_call() 
-                } else {
-                    self.add_start(self.current_token.span.start);
-                    self.construct_expr(ExpressionEnum::Var { ident: name.to_owned() })
-                }
-                        
+                _ => unimplemented!(),
             },
-            other => panic!("{:?}", other)
+            TokenType::Ident(_) => {
+                if let Some(Token {
+                    tt: TokenType::LParen,
+                    ..
+                }) = self.peek_token()
+                {
+                    self.parse_call()
+                } else {
+                    let ident = self.get_token();
+                    self.add_start(self.current_token.span.start);
+                    self.construct_expr(ExpressionEnum::Var { ident })
+                }
+            }
+            other => panic!("{:?}", other),
         }
     }
 
@@ -300,39 +336,45 @@ impl Parser {
 
     fn parse_expr_inner(&mut self, is_inner: bool) -> Expression {
         let mut left = self.parse_operand();
-        if let Some(token) = self.peek_token() { 
-            if let TokenType::Op(..) = token.tt { 
-                self.advance() 
+        if let Some(token) = self.peek_token() {
+            if let TokenType::Op(..) = token.tt {
+                self.advance()
             }
         }
 
         while let TokenType::Op(operator) = self.current_token.tt {
+            let token_op = self.get_token();
             self.add_start(left.span.start);
             self.advance(); // Consumes the operator
             let next_op = self.peek_next_op().unwrap_or(operator);
 
             left = match next_op.partial_cmp(&operator) {
-                Some(Ordering::Greater) => self.parse_greater(operator, left),
-                Some(Ordering::Equal) => self.parse_equal(operator, left),
+                Some(Ordering::Greater) => self.parse_greater(token_op, left),
+                Some(Ordering::Equal) => self.parse_equal(token_op, left),
                 Some(Ordering::Less) => {
-                    let result = self.parse_equal(operator, left);
+                    let result = self.parse_equal(token_op, left);
                     match is_inner {
                         true => return result,
-                        false => result
+                        false => result,
                     }
                 }
-                None => unimplemented!()
+                None => unimplemented!(),
             };
-            
+
             // Validates next token and checks if it's on a new line
             if let Some(mut token) = self.peek_token() {
                 match token.tt {
-                    TokenType::Literal(..) | TokenType::LParen | TokenType::Op(..) | TokenType::Ident(..) => {
-                        if !(token.span.comp_line_col(&mut self.current_token.span)) { return left }
-                    },
-                    _ => return left
+                    TokenType::Literal(..)
+                    | TokenType::LParen
+                    | TokenType::Op(..)
+                    | TokenType::Ident(..) => {
+                        if !(token.span.comp_line_col(&mut self.current_token.span)) {
+                            return left;
+                        }
+                    }
+                    _ => return left,
                 }
-            } 
+            }
 
             self.advance();
         }
@@ -340,33 +382,48 @@ impl Parser {
         left // Returns on either eof or rparen
     }
 
-    fn parse_greater(&mut self, operator: Op, left: Expression) -> Expression {
+    fn parse_greater(&mut self, operator: Token, left: Expression) -> Expression {
         let right = self.parse_expr_inner(true);
-        self.construct_expr(ExpressionEnum::BinOp { left, operator, right })
+        self.construct_expr(ExpressionEnum::BinOp {
+            left,
+            operator,
+            right,
+        })
     }
 
-    fn parse_equal(&mut self, operator: Op, left: Expression) -> Expression {
+    fn parse_equal(&mut self, operator: Token, left: Expression) -> Expression {
         let right = self.parse_operand();
-        self.construct_expr(ExpressionEnum::BinOp { left, operator, right })
+        self.construct_expr(ExpressionEnum::BinOp {
+            left,
+            operator,
+            right,
+        })
     }
 
     fn construct_expr(&mut self, expr: ExpressionEnum) -> Expression {
         self.current_expr_id += 1;
-        Expression { expr_enum: Box::new(expr), span: self.get_span(), id: self.current_expr_id }
+        Expression {
+            expr_enum: Box::new(expr),
+            span: self.get_span(),
+            id: self.current_expr_id,
+        }
     }
 
     fn construct_stmt(&mut self, stmt: StatementEnum) -> Statement {
-        Statement { stmt_enum: Box::new(stmt), span: self.get_span() }
+        Statement {
+            stmt_enum: Box::new(stmt),
+            span: self.get_span(),
+        }
     }
 
     fn get_span(&mut self) -> Span {
         (self.get_start(), self.current_token.span.end).into()
     }
 
-    fn add_start(&mut self, start: usize) { 
+    fn add_start(&mut self, start: usize) {
         self.start_stack.push(start);
-     }
-    
+    }
+
     fn get_start(&mut self) -> usize {
         match self.start_stack.pop() {
             Some(start) => start,
@@ -382,7 +439,7 @@ mod tests {
     use lexer::Lexer;
 
     #[test]
-    fn test_expr_parsing() {  
+    fn test_expr_parsing() {
         let test_cases = ["1 + 2 * 3", "1 * 2 + 3"];
 
         for case in test_cases {

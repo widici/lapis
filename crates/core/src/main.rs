@@ -1,10 +1,10 @@
 #[macro_use]
 extern crate log;
 mod args;
-use eval::{eval::Evaluator, env::Enviroment};
-use resolver::Resolver;
+use eval::{env::Enviroment, eval::Evaluator};
 use lexer::Lexer;
 use parser::Parser;
+use resolver::Resolver;
 use std::fs::File;
 use std::io::Read;
 
@@ -12,9 +12,9 @@ fn main() {
     env_logger::init();
 
     let args = args::parse();
-    let mut file = match File::open(&args.path) {
+    let mut file = match File::open(args.path) {
         Ok(file) => file,
-        Err(_) => unimplemented!()
+        Err(_) => unimplemented!(),
     };
 
     let mut contents = String::new();

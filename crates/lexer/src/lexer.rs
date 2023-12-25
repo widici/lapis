@@ -1,15 +1,15 @@
+use crate::token::Literal::{Bool, Char, Float, Int, Str};
+use crate::token::Op::{Add, And, Div, Eq, EqEq, Ge, Gt, Le, Lt, Mul, Ne, Not, Or, Pow, Rem, Sub};
 use crate::token::{Token, TokenType};
-use crate::token::Literal::{Float, Int, Bool, Str, Char};
-use crate::token::Op::{Div, Sub, Mul, Add, Pow, Rem, Eq, EqEq, Ne, Gt, Lt, Ge, Le, And, Or, Not};
 use error::Error;
+use error::{impl_error_handling, ErrorKind::IllegalChar, ErrorKind::Unclosed, ErrorLocation};
 use span::Span;
-use error::{impl_error_handling, ErrorLocation, ErrorKind::IllegalChar, ErrorKind::Unclosed};
 
 pub struct Lexer {
     input: Vec<char>,
     current_pos: usize,
     current_char: char,
-    errors: Vec<Error>
+    errors: Vec<Error>,
 }
 
 impl_error_handling!(Lexer, ErrorLocation::Lexer);
@@ -17,7 +17,12 @@ impl_error_handling!(Lexer, ErrorLocation::Lexer);
 impl Lexer {
     #[must_use]
     pub fn new(input: Vec<char>) -> Lexer {
-        let mut lexer: Lexer = Lexer { input, current_pos: 0, current_char: '\0', errors: Vec::new() };
+        let mut lexer: Lexer = Lexer {
+            input,
+            current_pos: 0,
+            current_char: '\0',
+            errors: Vec::new(),
+        };
         lexer.current_char = lexer.get_current_char();
         lexer
     }
@@ -31,7 +36,7 @@ impl Lexer {
 
     fn peek_char(&self) -> char {
         if &self.current_pos + 1 == self.input.len() {
-            return '\0'
+            return '\0';
         }
         self.input[self.current_pos + 1]
     }
@@ -48,37 +53,37 @@ impl Lexer {
                 '=' => {
                     self.advance();
                     TokenType::Op(EqEq)
-                },
-                _ => TokenType::Op(Eq)
+                }
+                _ => TokenType::Op(Eq),
             },
             '>' => match self.peek_char() {
                 '=' => {
                     self.advance();
                     TokenType::Op(Ge)
-                },
-                _ => TokenType::Op(Gt)
-            }
+                }
+                _ => TokenType::Op(Gt),
+            },
             '<' => match self.peek_char() {
                 '=' => {
                     self.advance();
                     TokenType::Op(Le)
-                },
-                _ => TokenType::Op(Lt)
+                }
+                _ => TokenType::Op(Lt),
             },
             '!' => match self.peek_char() {
                 '=' => {
                     self.advance();
                     TokenType::Op(Ne)
-                },
-                _ => TokenType::Op(Not)
-            }
+                }
+                _ => TokenType::Op(Not),
+            },
             '+' => TokenType::Op(Add),
             '-' => TokenType::Op(Sub),
             '*' => TokenType::Op(Mul),
             '/' => match self.peek_char() {
                 '/' => return self.lex_comment(),
                 '*' => return self.lex_block_comment(),
-                _ => TokenType::Op(Div)
+                _ => TokenType::Op(Div),
             },
             '^' => TokenType::Op(Pow),
             '%' => TokenType::Op(Rem),
@@ -87,9 +92,7 @@ impl Lexer {
             ',' => TokenType::Comma,
             '"' => self.get_string(),
             '\'' => self.get_char(),
-            ' ' | '\n' | '\t' => {
-                return None
-            },
+            ' ' | '\n' | '\t' => return None,
             '{' => TokenType::LCurly,
             '}' => TokenType::RCurly,
             v => {
@@ -98,8 +101,11 @@ impl Lexer {
                 } else if v.is_ascii_alphabetic() {
                     self.get_identifier()
                 } else {
-                    self.add_error(IllegalChar { found: *v, span: self.current_pos.into() });
-                    return None
+                    self.add_error(IllegalChar {
+                        found: *v,
+                        span: self.current_pos.into(),
+                    });
+                    return None;
                 }
             }
         })
@@ -107,7 +113,9 @@ impl Lexer {
 
     fn get_identifier(&mut self) -> TokenType {
         let start = self.current_pos;
-        while (self.peek_char().is_ascii_alphabetic() || self.peek_char() == '_') && self.current_char != '\0' {
+        while (self.peek_char().is_ascii_alphabetic() || self.peek_char() == '_')
+            && self.current_char != '\0'
+        {
             self.advance();
         }
 
@@ -127,15 +135,17 @@ impl Lexer {
             "and" => TokenType::Op(And),
             "or" => TokenType::Op(Or),
             name => TokenType::Ident(name.to_string()),
-        }
+        };
     }
 
     fn get_numeric(&mut self) -> TokenType {
         let mut int_str = String::new();
-        while self.current_char.is_numeric() || (self.current_char == '.' && !int_str.contains('.')) {
+        while self.current_char.is_numeric() || (self.current_char == '.' && !int_str.contains('.'))
+        {
             int_str.push(self.current_char);
 
-            if !self.peek_char().is_numeric() && (self.peek_char() != '.' || int_str.contains('.')) {
+            if !self.peek_char().is_numeric() && (self.peek_char() != '.' || int_str.contains('.'))
+            {
                 break;
             }
 
@@ -148,7 +158,7 @@ impl Lexer {
                     int_str.push('0')
                 }
                 TokenType::Literal(Float(int_str.parse::<f64>().unwrap()))
-            },
+            }
             false => TokenType::Literal(Int(int_str.parse::<i64>().unwrap())),
         }
     }
@@ -161,7 +171,10 @@ impl Lexer {
         while self.current_char != '"' {
             str.push(self.current_char);
             if self.peek_char() == '\0' {
-                self.add_error(Unclosed { ty: "str", start: start.into() });
+                self.add_error(Unclosed {
+                    ty: "str",
+                    start: start.into(),
+                });
                 self.report_errors();
             }
             self.advance();
@@ -172,7 +185,10 @@ impl Lexer {
     fn get_char(&mut self) -> TokenType {
         self.advance();
         if self.peek_char() != '\'' {
-            self.add_error(Unclosed { ty: "char", start: (self.current_pos - 1).into() })
+            self.add_error(Unclosed {
+                ty: "char",
+                start: (self.current_pos - 1).into(),
+            })
         }
         TokenType::Literal(Char(self.current_char))
     }
@@ -189,12 +205,15 @@ impl Lexer {
         while !(self.get_current_char() == '*' && self.peek_char() == '/') {
             let result = match self.get_current_char() {
                 '\n' | '\0' => self.get_token(),
-                _ => None
+                _ => None,
             };
 
             if result == Some(TokenType::EOF) {
-                self.add_error(Unclosed { ty: "block-comment", start: start.into() });
-                return result
+                self.add_error(Unclosed {
+                    ty: "block-comment",
+                    start: start.into(),
+                });
+                return result;
             }
 
             self.advance()
@@ -203,7 +222,7 @@ impl Lexer {
 
         None
     }
-    
+
     pub fn get_tokens(&mut self) -> Vec<Token> {
         let mut tokens: Vec<Token> = Vec::new();
 
@@ -212,7 +231,7 @@ impl Lexer {
             let token = self.get_token();
 
             match token {
-                None => {},
+                None => {}
                 Some(tt) => {
                     //info!("{:?} {:?} {:?}", self.get_current_char(), self.current_pos, tt);
                     let span = Span::new(start, self.current_pos);
@@ -241,10 +260,33 @@ mod tests {
     #[test]
     fn lexer_test() {
         let test_cases = [
-            ("11 + 2 * 8", vec![TokenType::Literal(Int(11)), TokenType::Op(Add), TokenType::Literal(Int(2)), TokenType::Op(Mul), TokenType::Literal(Int(8)), TokenType::EOF]),
-            ("if true {\n\tvar x = 10\n}", vec![TokenType::If, TokenType::Literal(Literal::Bool(true)), TokenType::LCurly, TokenType::Var, TokenType::Ident("x".to_string()), TokenType::Op(Op::Eq), TokenType::Literal(Literal::Int(10 as i64)), TokenType::RCurly, TokenType::EOF])
+            (
+                "11 + 2 * 8",
+                vec![
+                    TokenType::Literal(Int(11)),
+                    TokenType::Op(Add),
+                    TokenType::Literal(Int(2)),
+                    TokenType::Op(Mul),
+                    TokenType::Literal(Int(8)),
+                    TokenType::EOF,
+                ],
+            ),
+            (
+                "if true {\n\tvar x = 10\n}",
+                vec![
+                    TokenType::If,
+                    TokenType::Literal(Literal::Bool(true)),
+                    TokenType::LCurly,
+                    TokenType::Var,
+                    TokenType::Ident("x".to_string()),
+                    TokenType::Op(Op::Eq),
+                    TokenType::Literal(Literal::Int(10 as i64)),
+                    TokenType::RCurly,
+                    TokenType::EOF,
+                ],
+            ),
         ];
-        
+
         for case in test_cases {
             let input: Vec<char> = case.0.chars().collect();
             let mut lexer = Lexer::new(input);

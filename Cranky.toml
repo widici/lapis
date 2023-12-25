@@ -14,6 +14,7 @@ allow = [
     "clippy::multiple_crate_versions",
 
     "clippy::missing_errors_doc",
+    "clippy::clippy::missing_panics_doc",
     "clippy::new_without_default",
     "clippy::unnecessary_wraps",
     

@@ -25,14 +25,11 @@ fn generate_span_getters_struct(
 ) -> proc_macro2::TokenStream {
     match &struct_data.fields {
         Named(fields) => {
-            let option_field = fields.named.iter().find_map(|field| {
-                for attr in &field.attrs {
-                    if attr.path().is_ident("span") {
-                        return Some(field);
-                    }
-                }
-                None
-            });
+            let option_field = fields
+                .named
+                .iter()
+                .find(|field| field.attrs.iter().any(|attr| attr.path().is_ident("span")));
+
             return generate_fns_struct(option_field, ident);
         }
         _ => generate_fns_struct(None, ident),
@@ -63,16 +60,16 @@ fn generate_span_getters_enum(
         });
 
     quote! {
-        impl #ident {
-            pub fn get_option_span(&self) -> Option<&span::Span> {
+        impl<'a> span::GetSpanTrait<'a> for #ident {
+            fn get_span(&'a self) -> &'a span::Span {
+                unimplemented!()
+            }
+
+            fn get_option_span(&'a self) -> Option<&'a span::Span> {
                 match self {
                     #( #match_arms )*
                     _ => None
                 }
-            }
-
-            pub fn get_span(&self) -> &span::Span {
-                unimplemented!()
             }
         }
     }
@@ -102,12 +99,12 @@ fn generate_fns_struct(
             let ty = &field.ty;
             let field_ident = &field.ident;
             quote! {
-                impl #ident {
-                    pub fn get_span(&self) -> &#ty {
+                impl<'a> span::GetSpanTrait<'a> for #ident {
+                    fn get_span(&'a self) -> &'a #ty {
                         &self.#field_ident
                     }
 
-                    pub fn get_option_span(&self) -> Option<&#ty> {
+                    fn get_option_span(&'a self) -> Option<&'a #ty> {
                         Some(&self.#field_ident)
                     }
                 }
@@ -115,12 +112,12 @@ fn generate_fns_struct(
         }
         None => {
             quote! {
-                impl #ident {
-                    pub fn get_span(&self) -> &span::Span {
+                impl <'a> span::GetSpanTrait<'a> for #ident {
+                    fn get_span(&'a self) -> &'a span::Span {
                         unreachable!()
                     }
 
-                    pub fn get_option_span(&self) -> Option<&span::Span> {
+                    fn get_option_span(&'a self) -> Option<&'a span::Span> {
                         None
                     }
                 }

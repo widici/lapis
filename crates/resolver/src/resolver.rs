@@ -7,6 +7,7 @@ use error::{
     ErrorLocation,
 };
 use log::info;
+use span::GetSpanTrait;
 use std::collections::{
     hash_map::Entry::{Occupied, Vacant},
     HashMap,
@@ -38,6 +39,7 @@ impl Resolver {
         }
     }
 
+    #[must_use]
     pub fn resolve(mut self, stmts: Vec<Statement>) -> HashMap<Expression, usize> {
         self.new_scope();
         self.resolve_inner(stmts);
@@ -64,10 +66,10 @@ impl Resolver {
 
     fn declare(&mut self, ident: String) {
         if let Some(scope) = self.scopes.last_mut() {
-            if !scope.contains(&ident) {
-                scope.push(ident.clone())
-            } else {
+            if scope.contains(&ident) {
                 self.add_error(Redefenition { ident })
+            } else {
+                scope.push(ident)
             }
         } else {
             unreachable!("Failed to find scope in resolver")
@@ -95,8 +97,8 @@ impl Resolver {
     }
 
     fn resolve_cond_branch(&mut self, branch: (Expression, Statement)) {
-        let _ = self.visit_expr(branch.0);
-        let _ = self.visit_stmt(branch.1);
+        self.visit_expr(branch.0);
+        self.visit_stmt(branch.1);
     }
 }
 
@@ -119,9 +121,9 @@ impl Visitor for Resolver {
             }
             ExpressionEnum::Assignment { ident, right } => {
                 self.visit_expr(right);
-                self.update_side_table(expr, &ident.get_str_ident())
+                self.update_side_table(expr, ident.get_str_ident())
             }
-            ExpressionEnum::Var { ident } => self.update_side_table(expr, &ident.get_str_ident()),
+            ExpressionEnum::Var { ident } => self.update_side_table(expr, ident.get_str_ident()),
             ExpressionEnum::Literal(..) => {}
         }
     }

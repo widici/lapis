@@ -7,8 +7,8 @@
 
 set -e
 
-#echo "Running cargo fmt:"
-#cargo fmt -- --check
+echo "Running cargo fmt:"
+cargo fmt -- --check
 
 echo "Running cargo tests:"
 cargo test --all

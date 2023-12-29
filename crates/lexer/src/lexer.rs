@@ -190,7 +190,9 @@ impl Lexer {
                 start: (self.current_pos - 1).into(),
             })
         }
-        TokenType::Literal(Char(self.current_char))
+        let char = TokenType::Literal(Char(self.current_char));
+        self.advance();
+        char
     }
 
     fn lex_comment(&mut self) -> Option<TokenType> {

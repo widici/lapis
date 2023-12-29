@@ -1,2 +1,2 @@
 pub mod span;
-pub use span::Span;
+pub use span::{GetSpanTrait, Span};

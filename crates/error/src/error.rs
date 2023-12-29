@@ -1,5 +1,5 @@
 use miette::{Diagnostic, Report};
-use span::Span;
+use span::{GetSpanTrait, Span};
 use span_macros::GetSpan;
 use thiserror::Error;
 

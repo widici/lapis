@@ -3,7 +3,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use lexer::token::{Literal, Op, Token};
+use lexer::token::Token;
 use span::Span;
 use span_macros::GetSpan;
 

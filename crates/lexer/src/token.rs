@@ -14,6 +14,7 @@ impl Token {
         Token { tt, span }
     }
 
+    #[must_use]
     pub fn get_str_ident(&self) -> &String {
         match &self.tt {
             TokenType::Ident(ident) => ident,
@@ -61,7 +62,7 @@ pub enum TokenType {
     RCurly,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd)]
 pub enum Literal {
     Int(i64),
     Float(f64),

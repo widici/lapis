@@ -2,6 +2,11 @@ use line_col::LineColLookup;
 use miette::{SourceCode, SourceSpan};
 use std::{fmt::Debug, fs::read_to_string};
 
+pub trait GetSpanTrait<'a> {
+    fn get_span(&'a self) -> &'a Span;
+    fn get_option_span(&'a self) -> Option<&'a Span>;
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct Span {
     pub start: usize,
@@ -11,7 +16,7 @@ pub struct Span {
 
 impl Span {
     #[must_use]
-    pub fn new(start: usize, end: usize) -> Self {
+    pub const fn new(start: usize, end: usize) -> Self {
         Self {
             start,
             end,

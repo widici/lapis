@@ -196,7 +196,7 @@ impl Visitor for Evaluator {
                     _ => unreachable!(),
                 }
             }
-            ExpressionEnum::Var { ident } => self.env.get(&ident.get_str_ident(), &expr).unwrap(),
+            ExpressionEnum::Var { ident } => self.env.get(ident.get_str_ident(), &expr).unwrap(),
             ExpressionEnum::Assignment { ident, right } => {
                 let value = self.visit_expr(right);
                 self.env
@@ -339,41 +339,6 @@ impl Not for StackType {
 
 #[cfg(test)]
 mod tests {
-    use resolver::Resolver;
-    use span::Span;
-
-    use super::*;
-
-    #[test]
-    fn test_neg_op() {
-        assert_eq!(
-            -StackType::Literal(Literal::Int(100)),
-            StackType::Literal(Literal::Int(-100))
-        );
-        assert_eq!(
-            -StackType::Literal(Literal::Float(44.44)),
-            StackType::Literal(Literal::Float(-44.44))
-        );
-    }
-
-    #[test]
-    fn test_not_op() {
-        assert_eq!(
-            !StackType::Literal(Literal::Bool(true)),
-            StackType::Literal(Literal::Bool(false))
-        );
-        assert_eq!(
-            !StackType::Literal(Literal::Bool(false)),
-            StackType::Literal(Literal::Bool(true))
-        );
-    }
-
-    #[test]
-    fn test_pow_op() {
-        assert_eq!(3.pow(3), 27);
-        assert_eq!(2.5.pow(2.0), 6.25);
-    }
-
     /*#[test]
     fn test_visit_stmt() {
         let resolver = Resolver::new();

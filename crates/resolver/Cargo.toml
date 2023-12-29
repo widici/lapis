@@ -9,7 +9,7 @@ edition = "2021"
 log = "0.4.20"
 ast = { path = "../ast" }
 error = { path = "../error" }
+span = { path = "../span" }
 
 [dev-dependencies]
-span = { path = "../span" }
 lexer = { path = "../lexer" }

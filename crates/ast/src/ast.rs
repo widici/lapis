@@ -13,7 +13,7 @@ pub struct Expression {
     #[span]
     pub span: Span,
     /// This limits the amount of exprs in one program based on the target
-    /// E.g. on 2 ^ 64 - 1 on 64-bit targets
+    /// E.g. 2 ^ 64 - 1 on 64-bit targets
     pub id: usize,
 }
 

@@ -130,10 +130,24 @@ impl EnviromentNode {
     }
 
     pub(crate) fn assign(&mut self, ident: String, value: StackType) {
-        if self.stack[&ident] != value {
+        if !self.stack[&ident].cmp_type(&value) {
             unimplemented!()
         }
         self.stack.insert(ident, value);
         info!("Stack: {:?}", self.stack)
+    }
+}
+
+impl StackType {
+    fn cmp_type(&self, other: &Self) -> bool {
+        match (self, other) {
+            (StackType::Literal(self_lit), StackType::Literal(other_lit)) => {
+                self_lit.cmp_type(other_lit)
+            },
+            (StackType::Undefined, StackType::Literal(..)) | (StackType::Undefined, StackType::Undefined) => {
+                true
+            }
+            _ => unreachable!()
+        }
     }
 }

@@ -1,5 +1,5 @@
 pub mod lexer;
+pub mod ops;
 pub mod token;
-mod ops;
 
 pub use self::lexer::Lexer;

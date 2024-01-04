@@ -2,12 +2,16 @@ use crate::callable::{Callable, Function};
 use crate::env::{Enviroment, StackType};
 use ast::Visitor;
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
-use lexer::token::TokenType;
 use lexer::token::{
-    Literal::{self, Bool, Char, Float, Int, Str},
+    Literal::{self, Bool},
     Op,
+    TokenType,
 };
-use std::ops::{Add, Div, Mul, Neg, Not, Rem, Sub};
+use log::info;
+use lexer::ops::Pow;
+
+// New got: (Expression { expr_enum: Var { ident: Token { tt: Ident("n"), span: 25..25 } }, span: 25..25, id: 1 }, Token { tt: Op(EqEq), span: 27..28 }, Expression { expr_enum: Literal(Token { tt: Literal(Int(2)), span: 30..30 }), span: 30..30, id: 2 }) evaled into Some(Bool(true))
+
 
 pub struct Evaluator {
     pub(crate) env: Enviroment,
@@ -16,7 +20,6 @@ pub struct Evaluator {
 impl Evaluator {
     #[must_use]
     pub fn new(mut env: Enviroment) -> Self {
-        //resolver.new_scope(); // Add global scope
         env.new_node(); // Add global node
         Evaluator { env }
     }
@@ -33,60 +36,6 @@ impl Evaluator {
         let result = self.evaluate(stmts);
         self.env.drop();
         result
-    }
-
-    fn perform_arth_op<T>(left: T, operator: Op, right: T) -> Option<T>
-    where
-        T: Add<Output = T>
-            + Sub<Output = T>
-            + Mul<Output = T>
-            + Div<Output = T>
-            + Rem<Output = T>
-            + Pow<Output = T>,
-    {
-        Some(match operator {
-            Op::Add => left + right,
-            Op::Sub => left - right,
-            Op::Mul => left * right,
-            Op::Div => left / right,
-            Op::Pow => left.pow(right),
-            Op::Rem => left % right,
-            _ => return None,
-        })
-    }
-
-    fn perform_comp_op<T>(left: &T, operator: Op, right: &T) -> Option<bool>
-    where
-        T: PartialOrd + PartialEq,
-    {
-        Some(match operator {
-            Op::EqEq | Op::Ne => Evaluator::perform_eq_op(left, operator, right).unwrap(),
-            Op::Gt => left > right,
-            Op::Ge => left >= right,
-            Op::Lt => left < right,
-            Op::Le => left <= right,
-            _ => return None,
-        })
-    }
-
-    fn perform_eq_op<T>(left: &T, operator: Op, right: &T) -> Option<bool>
-    where
-        T: PartialEq,
-    {
-        Some(match operator {
-            Op::EqEq => left == right,
-            Op::Ne => left != right,
-            _ => return None,
-        })
-    }
-
-    fn perform_bool_op(left: bool, operator: Op, right: bool) -> Option<bool> {
-        Some(match operator {
-            Op::EqEq | Op::Ne => return Self::perform_eq_op(&left, operator, &right),
-            Op::And => left && right,
-            Op::Or => left || right,
-            _ => return None,
-        })
     }
 
     fn execute_cond_branch(
@@ -119,7 +68,6 @@ impl Visitor for Evaluator {
     type S = Result<(), StatementErr>;
 
     fn visit_expr(&mut self, expr: Expression) -> Self::E {
-        //println!("{:?}, {:?}-{:?}", expr.expr, expr.start, expr.end);
         match *expr.expr_enum.clone() {
             ExpressionEnum::Literal(token) => {
                 if let TokenType::Literal(literal) = token.tt {
@@ -133,68 +81,43 @@ impl Visitor for Evaluator {
                 operator,
                 right,
             } => {
-                let operator: Op = operator.into();
-                let (left_st, right_st) = (self.visit_expr(left), self.visit_expr(right));
-                match (left_st, right_st) {
-                    (StackType::Literal(Int(left)), StackType::Literal(Int(right))) => {
-                        if let Some(int) = Evaluator::perform_arth_op(left, operator, right) {
-                            StackType::Literal(Int(int))
-                        } else if let Some(bool) =
-                            Evaluator::perform_comp_op(&left, operator, &right)
-                        {
-                            StackType::Literal(Bool(bool))
-                        } else {
-                            unimplemented!()
-                        }
-                    }
-                    (StackType::Literal(Float(left)), StackType::Literal(Float(right))) => {
-                        if let Some(float) = Evaluator::perform_arth_op(left, operator, right) {
-                            StackType::Literal(Float(float))
-                        } else if let Some(bool) =
-                            Evaluator::perform_comp_op(&left, operator, &right)
-                        {
-                            StackType::Literal(Bool(bool))
-                        } else {
-                            unimplemented!()
-                        }
-                    }
-                    (StackType::Literal(Bool(left_bool)), StackType::Literal(Bool(right_bool))) => {
-                        if let Some(bool) =
-                            Evaluator::perform_bool_op(left_bool, operator, right_bool)
-                        {
-                            StackType::Literal(Bool(bool))
-                        } else {
-                            unimplemented!()
-                        }
-                    }
-                    (StackType::Literal(Str(left_str)), StackType::Literal(Str(right_str))) => {
-                        if let Some(bool) =
-                            Evaluator::perform_eq_op(&left_str, operator, &right_str)
-                        {
-                            StackType::Literal(Bool(bool))
-                        } else {
-                            unimplemented!()
-                        }
-                    }
-                    (StackType::Literal(Char(left_char)), StackType::Literal(Char(right_char))) => {
-                        if let Some(bool) =
-                            Evaluator::perform_eq_op(&left_char, operator, &right_char)
-                        {
-                            StackType::Literal(Bool(bool))
-                        } else {
-                            unimplemented!()
-                        }
-                    }
-                    _ => unimplemented!(),
-                }
+                let op = match operator.tt {
+                    TokenType::Op(op) => op,
+                    _ => unreachable!("Expected tt op"),
+                };
+                let (lhs_st, rhs_st) = (self.visit_expr(left), self.visit_expr(right));
+                if let (StackType::Literal(lhs), StackType::Literal(rhs)) = (lhs_st.clone(), rhs_st.clone()) {
+                    let res = match op {
+                        Op::Add => lhs + rhs,
+                        Op::Sub => lhs - rhs,
+                        Op::Mul => lhs * rhs,
+                        Op::Div => lhs / rhs,
+                        Op::Pow => lhs.pow(rhs),
+                        Op::Rem => lhs % rhs,
+                        _ => Some(Literal::Bool(match op {
+                            Op::Gt => lhs > rhs,
+                            Op::Ge => lhs >= rhs,
+                            Op::Lt => lhs < rhs,
+                            Op::Le => lhs <= rhs,
+                            Op::EqEq => lhs == rhs,
+                            Op::Ne => lhs != rhs,
+                            _ => unimplemented!()
+                        }))
+                    };
+                    StackType::Literal(res.unwrap())
+                } else { unimplemented!() }
+                
             }
             ExpressionEnum::UnaryOp { operator, expr } => {
-                let stack_type = self.visit_expr(expr);
-                match operator.into() {
-                    Op::Sub => -stack_type,
-                    Op::Not => !stack_type,
+                let literal = match self.visit_expr(expr) {
+                    StackType::Literal(literal) => literal,
+                    _ => unreachable!("Expected literal")
+                };
+                StackType::Literal(match operator.into() {
+                    Op::Sub => -literal,
+                    Op::Not => !literal,
                     _ => unreachable!(),
-                }
+                }.unwrap())
             }
             ExpressionEnum::Var { ident } => self.env.get(ident.get_str_ident(), &expr).unwrap(),
             ExpressionEnum::Assignment { ident, right } => {
@@ -287,53 +210,6 @@ impl Visitor for Evaluator {
             StatementEnum::Continue => return Err(StatementErr::Continue),
         }
         Ok(())
-    }
-}
-
-trait Pow<Rhs = Self> {
-    type Output;
-    fn pow(self, rhs: Rhs) -> Self::Output;
-}
-
-impl Pow<i64> for i64 {
-    type Output = i64;
-    fn pow(self, rhs: i64) -> Self::Output {
-        self.pow(u32::try_from(rhs).unwrap())
-    }
-}
-
-impl Pow<f64> for f64 {
-    type Output = f64;
-    fn pow(self, rhs: f64) -> Self::Output {
-        self.powf(rhs)
-    }
-}
-
-impl Neg for StackType {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        let result = match self {
-            Self::Literal(literal) => match literal {
-                Literal::Int(int) => Literal::Int(-int),
-                Literal::Float(float) => Literal::Float(-float),
-                _ => unreachable!(),
-            },
-            _ => unreachable!(),
-        };
-        StackType::Literal(result)
-    }
-}
-
-impl Not for StackType {
-    type Output = Self;
-
-    fn not(self) -> Self::Output {
-        let result = match self {
-            Self::Literal(Literal::Bool(boolean)) => Literal::Bool(!boolean),
-            _ => unreachable!(),
-        };
-        StackType::Literal(result)
     }
 }
 

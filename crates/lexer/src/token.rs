@@ -71,21 +71,9 @@ pub enum Literal {
     Char(char),
 }
 
-impl PartialEq for Literal {
-    fn eq(&self, other: &Self) -> bool {
-        match (&self.get_bool(), &other.get_bool()) {
-            (Some(self_bool), Some(other_bool)) => self_bool == other_bool,
-            _ => discriminant(self) == discriminant(other),
-        }
-    }
-}
-
 impl Literal {
-    const fn get_bool(&self) -> Option<bool> {
-        match &self {
-            Literal::Bool(boolean) => Some(*boolean),
-            _ => None,
-        }
+    pub fn cmp_type(&self, other: &Self) -> bool {
+        discriminant(self) == discriminant(other)
     }
 }
 
@@ -144,21 +132,6 @@ impl PartialOrd for Op {
         Some(self.get_precedence().cmp(&other.get_precedence()))
     }
 }
-
-/*
-impl Debug for TokenType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TokenType::ILLEGAL { pos, char } => {
-                write!(f, "{} Illegal char '{}'", " ".repeat(*pos), char)?
-            }
-            _ => write!(f, "{:?}", self)?
-        }
-
-        Ok(())
-    }
-}
-*/
 
 #[cfg(test)]
 mod tests {

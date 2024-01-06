@@ -1,5 +1,5 @@
 use line_col::LineColLookup;
-use miette::{SourceCode, SourceSpan};
+use miette::{SourceCode, SourceSpan, MietteSpanContents};
 use std::{fmt::Debug, fs::read_to_string};
 
 pub trait GetSpanTrait<'a> {
@@ -12,6 +12,7 @@ pub struct Span {
     pub start: usize,
     pub end: usize,
     source: Option<String>,
+    pub line_col: Option<((usize, usize), (usize, usize))>
 }
 
 impl Span {
@@ -21,14 +22,23 @@ impl Span {
             start,
             end,
             source: None,
+            line_col: None,
         }
     }
 
     #[must_use]
     pub fn get_line_col(&mut self) -> ((usize, usize), (usize, usize)) {
-        self.get_src();
+        if self.source.is_none() {
+            self.get_src()
+        }
         let lookup = LineColLookup::new(self.source.as_ref().unwrap());
         (lookup.get(self.start), lookup.get(self.end))
+    }
+
+    pub fn set_line_col(&mut self) {
+        if self.line_col.is_none() {
+            self.line_col = Some(self.get_line_col())
+        }
     }
 
     #[must_use]
@@ -51,7 +61,15 @@ impl SourceCode for Span {
         _context_lines_after: usize,
     ) -> Result<Box<dyn miette::SpanContents<'a> + 'a>, miette::MietteError> {
         let span: SourceSpan = (self.clone()).into();
-        self.source.as_ref().unwrap().read_span(&span, 1, 1)
+        let contents = self.source.as_ref().unwrap().read_span(&span, 1, 1)?;
+        Ok(Box::new(MietteSpanContents::new_named(
+            "./unamed.test".to_string(),
+            contents.data(),
+            *contents.span(),
+            contents.line(),
+            contents.column(),
+            contents.line_count()
+        )))
     }
 }
 

@@ -2,16 +2,11 @@ use crate::callable::{Callable, Function};
 use crate::env::{Enviroment, StackType};
 use ast::Visitor;
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
+use lexer::ops::Pow;
 use lexer::token::{
     Literal::{self, Bool},
-    Op,
-    TokenType,
+    Op, TokenType,
 };
-use log::info;
-use lexer::ops::Pow;
-
-// New got: (Expression { expr_enum: Var { ident: Token { tt: Ident("n"), span: 25..25 } }, span: 25..25, id: 1 }, Token { tt: Op(EqEq), span: 27..28 }, Expression { expr_enum: Literal(Token { tt: Literal(Int(2)), span: 30..30 }), span: 30..30, id: 2 }) evaled into Some(Bool(true))
-
 
 pub struct Evaluator {
     pub(crate) env: Enviroment,
@@ -86,7 +81,7 @@ impl Visitor for Evaluator {
                     _ => unreachable!("Expected tt op"),
                 };
                 let (lhs_st, rhs_st) = (self.visit_expr(left), self.visit_expr(right));
-                if let (StackType::Literal(lhs), StackType::Literal(rhs)) = (lhs_st.clone(), rhs_st.clone()) {
+                if let (StackType::Literal(lhs), StackType::Literal(rhs)) = (lhs_st, rhs_st) {
                     let res = match op {
                         Op::Add => lhs + rhs,
                         Op::Sub => lhs - rhs,
@@ -101,23 +96,27 @@ impl Visitor for Evaluator {
                             Op::Le => lhs <= rhs,
                             Op::EqEq => lhs == rhs,
                             Op::Ne => lhs != rhs,
-                            _ => unimplemented!()
-                        }))
+                            _ => unimplemented!(),
+                        })),
                     };
                     StackType::Literal(res.unwrap())
-                } else { unimplemented!() }
-                
+                } else {
+                    unimplemented!()
+                }
             }
             ExpressionEnum::UnaryOp { operator, expr } => {
                 let literal = match self.visit_expr(expr) {
                     StackType::Literal(literal) => literal,
-                    _ => unreachable!("Expected literal")
+                    _ => unreachable!("Expected literal"),
                 };
-                StackType::Literal(match operator.into() {
-                    Op::Sub => -literal,
-                    Op::Not => !literal,
-                    _ => unreachable!(),
-                }.unwrap())
+                StackType::Literal(
+                    match operator.into() {
+                        Op::Sub => -literal,
+                        Op::Not => !literal,
+                        _ => unreachable!(),
+                    }
+                    .unwrap(),
+                )
             }
             ExpressionEnum::Var { ident } => self.env.get(ident.get_str_ident(), &expr).unwrap(),
             ExpressionEnum::Assignment { ident, right } => {

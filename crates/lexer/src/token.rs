@@ -72,6 +72,7 @@ pub enum Literal {
 }
 
 impl Literal {
+    #[must_use]
     pub fn cmp_type(&self, other: &Self) -> bool {
         discriminant(self) == discriminant(other)
     }

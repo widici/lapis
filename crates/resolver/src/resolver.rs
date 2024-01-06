@@ -17,7 +17,7 @@ pub struct Resolver {
     /// Scopes -> scope -> idents
     scopes: Vec<Vec<String>>,
     // Call/var/assign-expr -> distance
-    pub side_table: HashMap<Expression, usize>,
+    side_table: HashMap<Expression, usize>,
     errors: Vec<Error>,
     fn_type: FnType,
     in_loop: bool,
@@ -93,7 +93,9 @@ impl Resolver {
         }
         self.add_error(NotFound {
             ident: ident.clone(),
-        })
+            required: expr.span,
+        });
+        self.report_errors()
     }
 
     fn resolve_cond_branch(&mut self, branch: (Expression, Statement)) {

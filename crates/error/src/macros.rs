@@ -12,7 +12,7 @@ macro_rules! impl_error_handling {
                 }
 
                 for error in self.errors.clone() {
-                    eprint!("{:?}", error.to_report())
+                    eprint!("{}", error)
                 }
                 std::process::exit(1)
             }

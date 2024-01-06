@@ -1,3 +1,5 @@
+use std::fmt::{Display, format};
+
 use miette::{Diagnostic, Report};
 use span::{GetSpanTrait, Span};
 use span_macros::GetSpan;
@@ -15,7 +17,7 @@ impl Error {
     pub fn new(kind: ErrorKind, location: ErrorLocation) -> Self {
         let mut span = kind.get_option_span().cloned();
         if let Some(ref mut span) = span {
-            span.get_src()
+            span.set_line_col()
         }
         Error {
             kind,
@@ -34,7 +36,25 @@ impl Error {
     }
 }
 
-#[derive(Clone)]
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut title = format!("{:?} error occurred", self.location);
+        if let Some(span) = self.span.as_ref() {
+            let lc = span.line_col.unwrap();
+            let pos = if lc.0 == lc.1 {
+                format!("{}:{}", lc.0.0, lc.0.1)
+            } else {
+                format!("{}:{}-{}:{}", lc.0.0, lc.0.1, lc.1.0, lc.1.1)
+            };
+            title += format!(" @ {}", pos).as_str()
+        };
+        writeln!(f, "{}:", title)?;
+        write!(f, "{:?}", self.clone().to_report())?;
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug)]
 pub enum ErrorLocation {
     /// Pre-processor errors such as file errors
     Initial,
@@ -79,5 +99,10 @@ pub enum ErrorKind {
     #[error("{} is already defined in the scope", ident)]
     Redefenition { ident: String },
     #[error("{} can't be found", ident)]
-    NotFound { ident: String },
+    NotFound {
+        ident: String,
+        #[label("Expected here")]
+        #[span]
+        required: Span,
+    },
 }

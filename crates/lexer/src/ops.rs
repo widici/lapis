@@ -102,8 +102,7 @@ mod tests {
     #[test]
     fn test_impl_arth_op() {
         for case in [
-            (   Literal::Int(1) + Literal::Int(2),
-                Some(Literal::Int(3))),
+            (Literal::Int(1) + Literal::Int(2), Some(Literal::Int(3))),
             (
                 Literal::Float(0.99) - Literal::Int(3),
                 Some(Literal::Float(-2.01)),
@@ -168,7 +167,11 @@ mod tests {
     fn literal_ord_test() {
         for case in [
             (Literal::Int(3), Literal::Int(2), Ordering::Greater),
-            (Literal::Float(1337.0), Literal::Float(3000.0), Ordering::Less)
+            (
+                Literal::Float(1337.0),
+                Literal::Float(3000.0),
+                Ordering::Less,
+            ),
         ] {
             assert_eq!(case.0.partial_cmp(&case.1), Some(case.2))
         }

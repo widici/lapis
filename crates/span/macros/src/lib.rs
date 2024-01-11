@@ -60,12 +60,12 @@ fn generate_span_getters_enum(
         });
 
     quote! {
-        impl<'a> span::GetSpanTrait<'a> for #ident {
-            fn get_span(&'a self) -> &'a span::Span {
+        impl span::GetSpanTrait for #ident {
+            fn get_span(&self) -> span::Span {
                 unimplemented!()
             }
 
-            fn get_option_span(&'a self) -> Option<&'a span::Span> {
+            fn get_option_span(&self) -> Option<span::Span> {
                 match self {
                     #( #match_arms )*
                     _ => None
@@ -82,7 +82,7 @@ fn generate_match_arm(
 ) -> proc_macro2::TokenStream {
     match field {
         Some(field_ident) => quote! {
-            #ident::#variant_ident { #field_ident, .. } => Some(#field_ident),
+            #ident::#variant_ident { #field_ident, .. } => Some(#field_ident.get_span()),
         },
         None => quote! {
             #ident::#variant_ident { .. } => None,
@@ -99,25 +99,25 @@ fn generate_fns_struct(
             let ty = &field.ty;
             let field_ident = &field.ident;
             quote! {
-                impl<'a> span::GetSpanTrait<'a> for #ident {
-                    fn get_span(&'a self) -> &'a #ty {
-                        &self.#field_ident
+                impl span::GetSpanTrait for #ident {
+                    fn get_span(&self) -> #ty {
+                        self.#field_ident.get_span()
                     }
 
-                    fn get_option_span(&'a self) -> Option<&'a #ty> {
-                        Some(&self.#field_ident)
+                    fn get_option_span(&self) -> Option<#ty> {
+                        Some(self.#field_ident.get_span())
                     }
                 }
             }
         }
         None => {
             quote! {
-                impl <'a> span::GetSpanTrait<'a> for #ident {
-                    fn get_span(&'a self) -> &'a span::Span {
+                impl span::GetSpanTrait for #ident {
+                    fn get_span(&self) -> span::Span {
                         unreachable!()
                     }
 
-                    fn get_option_span(&'a self) -> Option<&'a span::Span> {
+                    fn get_option_span(&self) -> Option<span::Span> {
                         None
                     }
                 }

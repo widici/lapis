@@ -1,4 +1,4 @@
-use crate::token::Literal::{Bool, Char, Float, Int, Str};
+use crate::token::Literal::{self, Bool, Char, Float, Int, Str};
 use crate::token::Op::{Add, And, Div, Eq, EqEq, Ge, Gt, Le, Lt, Mul, Ne, Not, Or, Pow, Rem, Sub};
 use crate::token::{Token, TokenType};
 use error::Error;
@@ -101,9 +101,12 @@ impl Lexer {
                 } else if v.is_ascii_alphabetic() {
                     self.get_identifier()
                 } else {
+                    let token = Token::new(
+                        TokenType::Literal(Literal::Char(*v)),
+                        self.current_pos.into(),
+                    );
                     self.add_error(IllegalChar {
-                        found: *v,
-                        span: self.current_pos.into(),
+                        found: Box::new(token),
                     });
                     return None;
                 }

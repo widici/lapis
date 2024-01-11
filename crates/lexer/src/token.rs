@@ -1,10 +1,14 @@
+use error::error::SerializedToken;
 use span::Span;
+use span_macros::GetSpan;
 use std::cmp::Ordering;
+use std::fmt::Display;
 use std::mem::discriminant;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, GetSpan)]
 pub struct Token {
     pub tt: TokenType,
+    #[span]
     pub span: Span,
 }
 
@@ -20,6 +24,15 @@ impl Token {
             TokenType::Ident(ident) => ident,
             _ => unreachable!("Expected tt ident"),
         }
+    }
+}
+
+impl SerializedToken for Token {}
+
+impl Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)?;
+        Ok(())
     }
 }
 
@@ -136,7 +149,9 @@ impl PartialOrd for Op {
 
 #[cfg(test)]
 mod tests {
-    use super::Op;
+    use span::{GetSpanTrait, Span};
+
+    use super::{Op, Token};
     use std::cmp::Ordering::Less;
 
     #[test]
@@ -146,5 +161,12 @@ mod tests {
         assert!(a <= b);
         assert!(a < b);
         assert!(a != b);
+    }
+
+    #[test]
+    fn get_span_test() {
+        let span = Span::new(0, 0);
+        let instance = Token::new(super::TokenType::EOF, span.clone());
+        assert_eq!(span, instance.get_span())
     }
 }

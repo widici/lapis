@@ -1,10 +1,10 @@
 use line_col::LineColLookup;
-use miette::{SourceCode, SourceSpan, MietteSpanContents};
+use miette::{MietteSpanContents, SourceCode, SourceSpan};
 use std::{fmt::Debug, fs::read_to_string};
 
-pub trait GetSpanTrait<'a> {
-    fn get_span(&'a self) -> &'a Span;
-    fn get_option_span(&'a self) -> Option<&'a Span>;
+pub trait GetSpanTrait {
+    fn get_span(&self) -> Span;
+    fn get_option_span(&self) -> Option<Span>;
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -12,7 +12,7 @@ pub struct Span {
     pub start: usize,
     pub end: usize,
     source: Option<String>,
-    pub line_col: Option<((usize, usize), (usize, usize))>
+    pub line_col: Option<((usize, usize), (usize, usize))>,
 }
 
 impl Span {
@@ -48,8 +48,17 @@ impl Span {
 
     pub fn get_src(&mut self) {
         if self.source.is_none() {
-            self.source = Some(read_to_string("./test.unamned").unwrap())
+            self.source = Some(read_to_string("./test.unamed").unwrap())
         }
+    }
+}
+
+impl GetSpanTrait for Span {
+    fn get_span(&self) -> Span {
+        self.clone()
+    }
+    fn get_option_span(&self) -> Option<Span> {
+        Some(self.clone())
     }
 }
 
@@ -63,12 +72,12 @@ impl SourceCode for Span {
         let span: SourceSpan = (self.clone()).into();
         let contents = self.source.as_ref().unwrap().read_span(&span, 1, 1)?;
         Ok(Box::new(MietteSpanContents::new_named(
-            "./unamed.test".to_string(),
+            "./test.unamed".to_string(),
             contents.data(),
             *contents.span(),
             contents.line(),
             contents.column(),
-            contents.line_count()
+            contents.line_count(),
         )))
     }
 }
@@ -87,7 +96,7 @@ impl From<(usize, usize)> for Span {
 
 impl From<Span> for SourceSpan {
     fn from(value: Span) -> Self {
-        (value.start..value.end).into()
+        (value.start..value.end + 1).into()
     }
 }
 

@@ -79,6 +79,7 @@ name = "ast"
 version = "0.1.0"
 dependencies = [
  "env_logger",
+ "error",
  "lexer",
  "log",
  "span",
@@ -197,6 +198,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dyn-clone"
+version = "1.0.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "545b22097d44f8a9581187cdf93de7a71e4722bf51200cfaba810865b49a495d"
+
+[[package]]
 name = "env_logger"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -223,6 +230,7 @@ dependencies = [
 name = "error"
 version = "0.1.0"
 dependencies = [
+ "dyn-clone",
  "line-col",
  "miette",
  "span",
@@ -291,6 +299,7 @@ dependencies = [
  "error",
  "log",
  "span",
+ "span-macros",
 ]
 
 [[package]]
@@ -391,6 +400,7 @@ version = "0.1.0"
 dependencies = [
  "ast",
  "env_logger",
+ "error",
  "lexer",
  "log",
  "span",

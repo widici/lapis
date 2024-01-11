@@ -1,8 +1,9 @@
 use std::{
-    fmt::Debug,
+    fmt::{Debug, Display},
     hash::{Hash, Hasher},
 };
 
+use error::error::SerializedToken;
 use lexer::token::Token;
 use span::Span;
 use span_macros::GetSpan;
@@ -16,6 +17,15 @@ pub struct Expression {
     /// E.g. 2 ^ 64 - 1 on 64-bit targets
     pub id: usize,
 }
+
+impl Display for Expression {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)?;
+        Ok(())
+    }
+}
+
+impl SerializedToken for Expression {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExpressionEnum {
@@ -48,6 +58,15 @@ pub struct Statement {
     #[span]
     pub span: Span,
 }
+
+impl Display for Statement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)?;
+        Ok(())
+    }
+}
+
+impl SerializedToken for Statement {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum StatementEnum {

@@ -1,6 +1,7 @@
-use std::fmt::{Display, format};
+use std::fmt::{Debug, Display};
 
-use miette::{Diagnostic, Report};
+use dyn_clone::{clone_trait_object, DynClone};
+use miette::{Diagnostic, Report, SourceSpan};
 use span::{GetSpanTrait, Span};
 use span_macros::GetSpan;
 use thiserror::Error;
@@ -15,7 +16,7 @@ pub struct Error {
 impl Error {
     #[must_use]
     pub fn new(kind: ErrorKind, location: ErrorLocation) -> Self {
-        let mut span = kind.get_option_span().cloned();
+        let mut span = kind.get_option_span();
         if let Some(ref mut span) = span {
             span.set_line_col()
         }
@@ -42,9 +43,9 @@ impl Display for Error {
         if let Some(span) = self.span.as_ref() {
             let lc = span.line_col.unwrap();
             let pos = if lc.0 == lc.1 {
-                format!("{}:{}", lc.0.0, lc.0.1)
+                format!("{}:{}", lc.0 .0, lc.0 .1)
             } else {
-                format!("{}:{}-{}:{}", lc.0.0, lc.0.1, lc.1.0, lc.1.1)
+                format!("{}:{}-{}:{}", lc.0 .0, lc.0 .1, lc.1 .0, lc.1 .1)
             };
             title += format!(" @ {}", pos).as_str()
         };
@@ -67,19 +68,23 @@ pub enum ErrorLocation {
 #[derive(Diagnostic, Error, Debug, Clone, GetSpan)]
 pub enum ErrorKind {
     #[error("Found unexpected: {}, expected: {}", found, expected)]
-    Unexpected {
+    UnexpectedExpected {
         expected: String,
-        found: String,
         #[label]
         #[span]
-        span: Span,
+        found: Box<dyn SerializedToken>,
+    },
+    #[error("Found unexpected: {}", found)]
+    Unexpected {
+        #[label]
+        #[span]
+        found: Box<dyn SerializedToken>,
     },
     #[error("Found Illegal char: {}", found)]
     IllegalChar {
-        found: char,
         #[label]
         #[span]
-        span: Span,
+        found: Box<dyn SerializedToken>,
     },
     #[error("Unclosed {} found starting:", ty)]
     Unclosed {
@@ -105,4 +110,14 @@ pub enum ErrorKind {
         #[span]
         required: Span,
     },
+}
+
+pub trait SerializedToken: Debug + Display + GetSpanTrait + Sync + Send + DynClone {}
+
+clone_trait_object!(SerializedToken);
+
+impl From<Box<dyn SerializedToken>> for SourceSpan {
+    fn from(value: Box<dyn SerializedToken>) -> Self {
+        value.get_span().into()
+    }
 }

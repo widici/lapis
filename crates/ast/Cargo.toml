@@ -11,3 +11,4 @@ log = "0.4.20"
 lexer = { path = "../lexer" }
 span = { path = "../span" }
 span-macros = { path = "../span/macros" }
+error = { path = "../error" }

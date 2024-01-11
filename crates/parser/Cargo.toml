@@ -11,3 +11,4 @@ log = "0.4.20"
 ast = { path = "../ast" }
 lexer = { path = "../lexer" }
 span = { path = "../span" }
+error = { path = "../error" }

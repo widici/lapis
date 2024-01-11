@@ -1,4 +1,6 @@
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
+use error::ErrorKind::{Unexpected, UnexpectedExpected};
+use error::{impl_error_handling, Error, ErrorLocation};
 use lexer::token::{Op, Token, TokenType};
 use span::Span;
 use std::cmp::Ordering;
@@ -9,7 +11,10 @@ pub struct Parser {
     current_token: Token,
     start_stack: Vec<usize>,
     current_expr_id: usize,
+    errors: Vec<Error>,
 }
+
+impl_error_handling!(Parser, ErrorLocation::Parser);
 
 impl Parser {
     #[must_use]
@@ -21,26 +26,32 @@ impl Parser {
             current_token,
             start_stack: Vec::new(),
             current_expr_id: 0,
+            errors: Vec::new(),
         };
         parser.current_token = parser.get_token();
         parser
     }
 
     pub fn parse(&mut self) -> Vec<Statement> {
-        self.parse_inner(false)
+        let result = self.parse_inner(false);
+        self.report_errors();
+        result
     }
 
     fn parse_inner(&mut self, is_inner: bool) -> Vec<Statement> {
         let mut stmts: Vec<Statement> = Vec::new();
         loop {
-            match self.current_token.tt {
+            match self.current_token.tt.clone() {
                 TokenType::EOF => break,
                 TokenType::RCurly => {
                     //self.advance(); // Consumes the rcurly
                     if is_inner {
                         break;
                     }
-                    unimplemented!()
+                    self.add_error(Unexpected {
+                        found: Box::new(self.current_token.clone()),
+                    });
+                    // TODO: Maybe add report here?
                 }
                 _ => {
                     stmts.push(self.parse_stmt());
@@ -65,7 +76,12 @@ impl Parser {
                     if token.tt == TokenType::LParen {
                         StatementEnum::Expression(self.parse_call())
                     } else {
-                        unimplemented!()
+                        self.add_error(UnexpectedExpected {
+                            expected: format!("{:?}", TokenType::LParen),
+                            found: Box::new(token),
+                        });
+                        self.report_errors();
+                        unreachable!()
                     }
                 } else {
                     unimplemented!()

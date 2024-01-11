@@ -136,7 +136,7 @@ impl Visitor for Resolver {
                 FnType::Fn => self.visit_expr(expr.clone()),
                 FnType::None => self.add_error(StmtUnexpectedContext {
                     stmt: format!("{:?}", stmt_enum),
-                    span: stmt.get_span().clone(),
+                    span: stmt.get_span(),
                 }),
             },
             StatementEnum::Expression(expr) => self.visit_expr(expr),
@@ -189,7 +189,7 @@ impl Visitor for Resolver {
                 if !self.in_loop {
                     self.add_error(StmtUnexpectedContext {
                         stmt: format!("{:?}", stmt_enum),
-                        span: stmt.get_span().clone(),
+                        span: stmt.get_span(),
                     })
                 }
             }

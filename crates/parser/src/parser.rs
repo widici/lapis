@@ -1,5 +1,5 @@
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
-use error::ErrorKind::{Unexpected, UnexpectedExpected};
+use error::ErrorKind::{Unexpected, UnexpectedExpected, DuplicateParam};
 use error::{impl_error_handling, Error, ErrorLocation};
 use lexer::token::{Op, Token, TokenType};
 use span::Span;
@@ -59,12 +59,10 @@ impl Parser {
                 }
             }
         }
-        //println!("Returns: {:?}", self.current_token);
         stmts
     }
 
     fn parse_stmt(&mut self) -> Statement {
-        //println!("Parsing stmt on: {:?}", self.current_token);
         self.add_start(self.current_token.span.start);
         let stmt = match &self.current_token.tt {
             TokenType::Var => self.parse_var_decl(),
@@ -140,7 +138,11 @@ impl Parser {
     fn parse_ident(&mut self) -> Token {
         let ident = match &self.current_token.tt {
             TokenType::Ident(_) => self.current_token.clone(),
-            _ => unimplemented!(),
+            _ => {
+                self.add_error(UnexpectedExpected { expected: String::from("TokenType::Ident"), found: Box::new(self.current_token.clone()) });
+                self.report_errors();
+                unreachable!()
+            },
         };
         self.advance();
         ident
@@ -171,7 +173,11 @@ impl Parser {
                     token
                 }
             },
-            _ => unimplemented!(),
+            _ => {
+                self.add_error(UnexpectedExpected { expected: String::from("TokenType::Op"), found: Box::new(self.current_token.clone()) });
+                self.report_errors();
+                unreachable!()
+            }
         };
         self.advance();
 
@@ -219,15 +225,18 @@ impl Parser {
             match &self.current_token.tt {
                 TokenType::Comma => self.advance(),
                 TokenType::RParen => {}
-                _ => unimplemented!(),
+                _ => {
+                    self.add_error(UnexpectedExpected { expected: format!("{:?} or {:?}", TokenType::Comma, TokenType::RParen), found: Box::new(self.current_token.clone()) })
+                },
             }
 
             if params.contains(&ident) {
-                unimplemented!()
+                self.add_error(DuplicateParam { param: Box::new(ident.clone()) })
             }
 
             params.push(ident)
         }
+        self.report_errors();
         self.advance(); // Consume the rparen
 
         self.add_start(self.current_token.span.start);
@@ -327,7 +336,11 @@ impl Parser {
                     let expr = self.parse_operand();
                     self.construct_expr(ExpressionEnum::UnaryOp { operator, expr })
                 }
-                _ => unimplemented!(),
+                _ => {
+                    self.add_error(UnexpectedExpected { expected: format!("{:?} or {:?}", Op::Sub, Op::Not), found: Box::new(self.current_token.clone()) });
+                    self.report_errors();
+                    unreachable!()
+                },
             },
             TokenType::Ident(_) => {
                 if let Some(Token {

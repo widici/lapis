@@ -7,7 +7,6 @@ use error::{
     ErrorLocation,
 };
 use log::info;
-use span::GetSpanTrait;
 use std::collections::{
     hash_map::Entry::{Occupied, Vacant},
     HashMap,
@@ -16,7 +15,7 @@ use std::collections::{
 pub struct Resolver {
     /// Scopes -> scope -> idents
     scopes: Vec<Vec<String>>,
-    // Call/var/assign-expr -> distance
+    /// Call/var/assign-expr -> distance
     side_table: HashMap<Expression, usize>,
     errors: Vec<Error>,
     fn_type: FnType,
@@ -132,11 +131,10 @@ impl Visitor for Resolver {
 
     fn visit_stmt(&mut self, stmt: Statement) -> Self::S {
         match *stmt.stmt_enum.clone() {
-            ref stmt_enum @ StatementEnum::Return { ref expr } => match self.fn_type {
+            StatementEnum::Return { ref expr } => match self.fn_type {
                 FnType::Fn => self.visit_expr(expr.clone()),
                 FnType::None => self.add_error(StmtUnexpectedContext {
-                    stmt: format!("{:?}", stmt_enum),
-                    span: stmt.get_span(),
+                    found: Box::new(stmt)
                 }),
             },
             StatementEnum::Expression(expr) => self.visit_expr(expr),
@@ -185,11 +183,10 @@ impl Visitor for Resolver {
                 self.visit_stmt(block);
                 self.in_loop = false;
             }
-            stmt_enum @ (StatementEnum::Break | StatementEnum::Continue) => {
+            StatementEnum::Break | StatementEnum::Continue => {
                 if !self.in_loop {
                     self.add_error(StmtUnexpectedContext {
-                        stmt: format!("{:?}", stmt_enum),
-                        span: stmt.get_span(),
+                        found: Box::new(stmt)
                     })
                 }
             }

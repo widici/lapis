@@ -93,13 +93,11 @@ pub enum ErrorKind {
         #[span]
         start: Span,
     },
-    #[error("Statement: {} used in an unexpected context", stmt)]
+    #[error("Statement: {} used in an unexpected context", found)]
     StmtUnexpectedContext {
-        // TODO: replace this with StatementEnum
-        stmt: String,
         #[label]
         #[span]
-        span: Span,
+        found: Box<dyn SerializedToken>
     },
     #[error("{} is already defined in the scope", ident)]
     Redefenition { ident: String },
@@ -110,6 +108,12 @@ pub enum ErrorKind {
         #[span]
         required: Span,
     },
+    #[error("Duplicate param idents are not allowed in this context")]
+    DuplicateParam {
+        #[label("Duplicate param used here")]
+        #[span]
+        param: Box<dyn SerializedToken>
+    }
 }
 
 pub trait SerializedToken: Debug + Display + GetSpanTrait + Sync + Send + DynClone {}

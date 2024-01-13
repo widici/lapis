@@ -60,14 +60,3 @@ impl From<StackType> for Function {
         }
     }
 }
-
-/*
-fn f(x) {
-    return x += 1
-}
-
-fn g(x) {
-    <- x += 1
-}
-
-*/

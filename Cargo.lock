@@ -244,6 +244,7 @@ version = "0.1.0"
 dependencies = [
  "ast",
  "env_logger",
+ "error",
  "lexer",
  "log",
  "resolver",

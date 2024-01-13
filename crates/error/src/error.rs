@@ -93,11 +93,11 @@ pub enum ErrorKind {
         #[span]
         start: Span,
     },
-    #[error("Statement: {} used in an unexpected context", found)]
+    #[error("{} used in an unexpected context", found)]
     StmtUnexpectedContext {
         #[label]
         #[span]
-        found: Box<dyn SerializedToken>
+        found: Box<dyn SerializedToken>,
     },
     #[error("{} is already defined in the scope", ident)]
     Redefenition { ident: String },
@@ -112,7 +112,18 @@ pub enum ErrorKind {
     DuplicateParam {
         #[label("Duplicate param used here")]
         #[span]
-        param: Box<dyn SerializedToken>
+        param: Box<dyn SerializedToken>,
+    },
+    #[error("Operands doesn't have an impl for binary operator")]
+    InvalidOperands {
+        #[label("binary operator")]
+        op: Box<dyn SerializedToken>,
+        #[label("left hand side")]
+        lhs: Box<dyn SerializedToken>,
+        #[label("right hand side")]
+        rhs: Box<dyn SerializedToken>,
+        #[span]
+        span: Span,
     }
 }
 

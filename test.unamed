@@ -1,1 +1,3 @@
-continue
+if "abc" {
+    var x = 10
+}

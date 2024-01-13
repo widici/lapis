@@ -1,5 +1,5 @@
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
-use error::ErrorKind::{Unexpected, UnexpectedExpected, DuplicateParam};
+use error::ErrorKind::{DuplicateParam, Unexpected, UnexpectedExpected};
 use error::{impl_error_handling, Error, ErrorLocation};
 use lexer::token::{Op, Token, TokenType};
 use span::Span;
@@ -139,10 +139,13 @@ impl Parser {
         let ident = match &self.current_token.tt {
             TokenType::Ident(_) => self.current_token.clone(),
             _ => {
-                self.add_error(UnexpectedExpected { expected: String::from("TokenType::Ident"), found: Box::new(self.current_token.clone()) });
+                self.add_error(UnexpectedExpected {
+                    expected: String::from("TokenType::Ident"),
+                    found: Box::new(self.current_token.clone()),
+                });
                 self.report_errors();
                 unreachable!()
-            },
+            }
         };
         self.advance();
         ident
@@ -151,8 +154,12 @@ impl Parser {
     fn parse_var_decl(&mut self) -> StatementEnum {
         self.advance(); // Consumes the var-kw
         let ident = self.parse_ident();
-
-        assert_eq!(&self.current_token.tt, &TokenType::Op(Op::Eq));
+        if self.current_token.tt != TokenType::Op(Op::Eq) {
+            self.add_error(UnexpectedExpected { 
+                expected: format!("{:?}", Op::Eq), 
+                found: Box::new(self.current_token.clone())
+            })
+        }
         self.advance();
 
         let expr = self.parse_expr();
@@ -169,12 +176,20 @@ impl Parser {
                 _ => {
                     let token = self.get_token();
                     self.advance(); // Consumes the eq
-                    assert_eq!(self.current_token.tt, TokenType::Op(Op::Eq));
+                    if self.current_token.tt != TokenType::Op(Op::Eq) {
+                        self.add_error(UnexpectedExpected { 
+                            expected: format!("{:?}", Op::Eq), 
+                            found: Box::new(self.current_token.clone())
+                        })
+                    }
                     token
                 }
             },
             _ => {
-                self.add_error(UnexpectedExpected { expected: String::from("TokenType::Op"), found: Box::new(self.current_token.clone()) });
+                self.add_error(UnexpectedExpected {
+                    expected: String::from("TokenType::Op"),
+                    found: Box::new(self.current_token.clone()),
+                });
                 self.report_errors();
                 unreachable!()
             }
@@ -204,7 +219,12 @@ impl Parser {
     }
 
     fn parse_block(&mut self) -> StatementEnum {
-        assert_eq!(self.current_token.tt, TokenType::LCurly);
+        if self.current_token.tt != TokenType::LCurly {
+            self.add_error(UnexpectedExpected { 
+                expected: format!("{:?}", TokenType::LCurly), 
+                found: Box::new(self.current_token.clone())
+            })
+        }
         self.advance(); // Consumes the lcurly
         StatementEnum::Block {
             stmts: self.parse_inner(true),
@@ -214,8 +234,12 @@ impl Parser {
     fn parse_fn_decl(&mut self) -> StatementEnum {
         self.advance(); // Consumes the fn-kw
         let ident = self.parse_ident();
-
-        assert_eq!(self.current_token.tt, TokenType::LParen);
+        if self.current_token.tt != TokenType::LParen {
+            self.add_error(UnexpectedExpected { 
+                expected: format!("{:?}", TokenType::LParen), 
+                found: Box::new(self.current_token.clone())
+            })
+        }
         self.advance(); // Consumes the lparen
 
         let mut params: Vec<Token> = Vec::new();
@@ -225,13 +249,16 @@ impl Parser {
             match &self.current_token.tt {
                 TokenType::Comma => self.advance(),
                 TokenType::RParen => {}
-                _ => {
-                    self.add_error(UnexpectedExpected { expected: format!("{:?} or {:?}", TokenType::Comma, TokenType::RParen), found: Box::new(self.current_token.clone()) })
-                },
+                _ => self.add_error(UnexpectedExpected {
+                    expected: format!("{:?} or {:?}", TokenType::Comma, TokenType::RParen),
+                    found: Box::new(self.current_token.clone()),
+                }),
             }
 
             if params.contains(&ident) {
-                self.add_error(DuplicateParam { param: Box::new(ident.clone()) })
+                self.add_error(DuplicateParam {
+                    param: Box::new(ident.clone()),
+                })
             }
 
             params.push(ident)
@@ -300,7 +327,12 @@ impl Parser {
     fn parse_call(&mut self) -> Expression {
         self.add_start(self.current_token.span.start);
         let ident = self.parse_ident();
-        assert_eq!(self.current_token.tt, TokenType::LParen);
+        if self.current_token.tt != TokenType::LParen {
+            self.add_error(UnexpectedExpected { 
+                expected: format!("{:?}", TokenType::LParen), 
+                found: Box::new(self.current_token.clone())
+            })
+        }
         self.advance();
 
         let mut params: Vec<Expression> = Vec::new();
@@ -337,10 +369,13 @@ impl Parser {
                     self.construct_expr(ExpressionEnum::UnaryOp { operator, expr })
                 }
                 _ => {
-                    self.add_error(UnexpectedExpected { expected: format!("{:?} or {:?}", Op::Sub, Op::Not), found: Box::new(self.current_token.clone()) });
+                    self.add_error(UnexpectedExpected {
+                        expected: format!("{:?} or {:?}", Op::Sub, Op::Not),
+                        found: Box::new(self.current_token.clone()),
+                    });
                     self.report_errors();
                     unreachable!()
-                },
+                }
             },
             TokenType::Ident(_) => {
                 if let Some(Token {
@@ -355,7 +390,11 @@ impl Parser {
                     self.construct_expr(ExpressionEnum::Var { ident })
                 }
             }
-            other => panic!("{:?}", other),
+            _ => {
+                self.add_error(Unexpected { found: Box::new(self.current_token.clone()) });
+                self.report_errors();
+                unreachable!()
+            },
         }
     }
 

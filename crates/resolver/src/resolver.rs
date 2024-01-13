@@ -134,7 +134,7 @@ impl Visitor for Resolver {
             StatementEnum::Return { ref expr } => match self.fn_type {
                 FnType::Fn => self.visit_expr(expr.clone()),
                 FnType::None => self.add_error(StmtUnexpectedContext {
-                    found: Box::new(stmt)
+                    found: Box::new(stmt),
                 }),
             },
             StatementEnum::Expression(expr) => self.visit_expr(expr),
@@ -186,7 +186,7 @@ impl Visitor for Resolver {
             StatementEnum::Break | StatementEnum::Continue => {
                 if !self.in_loop {
                     self.add_error(StmtUnexpectedContext {
-                        found: Box::new(stmt)
+                        found: Box::new(stmt),
                     })
                 }
             }

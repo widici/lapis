@@ -7,22 +7,28 @@ use lexer::token::{
     Literal::{self, Bool},
     Op, TokenType,
 };
+use error::{impl_error_handling, ErrorLocation, Error};
+use error::ErrorKind::{InvalidOperands, UnexpectedExpected};
 
 pub struct Evaluator {
     pub(crate) env: Enviroment,
+    errors: Vec<Error>
 }
+
+impl_error_handling!(Evaluator, ErrorLocation::Evaluator);
 
 impl Evaluator {
     #[must_use]
     pub fn new(mut env: Enviroment) -> Self {
         env.new_node(); // Add global node
-        Evaluator { env }
+        Evaluator { env, errors: Vec::new() }
     }
 
     pub fn evaluate(&mut self, stmts: Vec<Statement>) -> Result<(), StatementErr> {
         for stmt in stmts {
             self.visit_stmt(stmt)?;
         }
+        self.report_errors();
         Ok(())
     }
 
@@ -38,14 +44,16 @@ impl Evaluator {
         condition: Expression,
         block: Statement,
     ) -> Option<Result<(), StatementErr>> {
-        let evaluated = self.visit_expr(condition);
+        let evaluated = self.visit_expr(condition.clone());
         match evaluated {
             StackType::Literal(Bool(boolean)) => {
                 if boolean {
                     return Some(self.visit_stmt(block));
                 }
             }
-            _ => unimplemented!(),
+            _ => {
+                self.add_error(UnexpectedExpected { expected: "bool".to_string(), found: Box::new(condition) });
+            },
         }
         None
     }
@@ -68,7 +76,7 @@ impl Visitor for Evaluator {
                 if let TokenType::Literal(literal) = token.tt {
                     StackType::Literal(literal)
                 } else {
-                    unimplemented!()
+                    unreachable!()
                 }
             }
             ExpressionEnum::BinOp {
@@ -80,8 +88,8 @@ impl Visitor for Evaluator {
                     TokenType::Op(op) => op,
                     _ => unreachable!("Expected tt op"),
                 };
-                let (lhs_st, rhs_st) = (self.visit_expr(left), self.visit_expr(right));
-                if let (StackType::Literal(lhs), StackType::Literal(rhs)) = (lhs_st, rhs_st) {
+                let (lhs_st, rhs_st) = (self.visit_expr(left.clone()), self.visit_expr(right.clone()));
+                if let (StackType::Literal(lhs), StackType::Literal(rhs)) = (lhs_st.clone(), rhs_st.clone()) {
                     let res = match op {
                         Op::Add => lhs + rhs,
                         Op::Sub => lhs - rhs,
@@ -96,12 +104,36 @@ impl Visitor for Evaluator {
                             Op::Le => lhs <= rhs,
                             Op::EqEq => lhs == rhs,
                             Op::Ne => lhs != rhs,
-                            _ => unimplemented!(),
+                            _ => {
+                                unreachable!("Found unexpected op")
+                            },
                         })),
                     };
+                    if res.is_none() {
+                        let kind = InvalidOperands {
+                            op: Box::new(operator),
+                            lhs: Box::new(left.clone()), 
+                            rhs: Box::new(right.clone()), 
+                            span: (left.span.start, right.span.end).into()
+                        };
+                        self.add_error(kind);
+                        self.report_errors();
+                        unreachable!()
+                    }
                     StackType::Literal(res.unwrap())
                 } else {
-                    unimplemented!()
+                    match lhs_st {
+                        StackType::Literal(..) => {},
+                        _ => {
+                            self.add_error(UnexpectedExpected { expected: "literal".to_owned(), found: Box::new(left) })
+                        }
+                    }
+                    match rhs_st {
+                        StackType::Literal(..) => {}
+                        _ => self.add_error(UnexpectedExpected { expected: "literal".to_owned(), found: Box::new(right) })
+                    }
+                    self.report_errors();
+                    unreachable!()
                 }
             }
             ExpressionEnum::UnaryOp { operator, expr } => {

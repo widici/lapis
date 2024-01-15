@@ -196,15 +196,15 @@ impl Parser {
         };
         self.advance();
 
-        let left = self.parse_expr();
+        let right = self.parse_expr();
         // x op= 10 -> x = x op 10
         let right = match operator.tt {
-            TokenType::Op(Op::Eq) => left,
+            TokenType::Op(Op::Eq) => right,
             _ => {
                 // Temporary solution
-                self.add_start(left.span.start); // Push for right
-                self.add_start(left.span.start); // Push for expr
-                let right = self.construct_expr(ExpressionEnum::Var {
+                self.add_start(right.span.start); // Push for right
+                self.add_start(right.span.start); // Push for expr
+                let left = self.construct_expr(ExpressionEnum::Var {
                     ident: ident.clone(),
                 });
                 let expr = ExpressionEnum::BinOp {

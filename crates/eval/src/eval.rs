@@ -1,5 +1,5 @@
-use crate::callable::{Callable, Function};
-use crate::env::{Enviroment, StackType};
+use crate::callable::{Callable, Function, Puts};
+use crate::env::{Enviroment, StackType, EnviromentNode};
 use ast::Visitor;
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
 use error::ErrorKind::{InvalidOperands, MismatchedTypes, UnexpectedExpected, Unexpected};
@@ -12,6 +12,7 @@ use lexer::token::{
 
 pub struct Evaluator {
     pub(crate) env: Enviroment,
+    global: EnviromentNode,
     errors: Vec<Error>,
 }
 
@@ -21,8 +22,11 @@ impl Evaluator {
     #[must_use]
     pub fn new(mut env: Enviroment) -> Self {
         env.new_node(); // Add global node
+        let mut global = EnviromentNode::new();
+        global.declare("puts", StackType::Function(Box::new(Puts {})));
         Evaluator {
             env,
+            global,
             errors: Vec::new(),
         }
     }
@@ -191,13 +195,16 @@ impl Visitor for Evaluator {
                     .into_iter()
                     .map(|param| self.visit_expr(param))
                     .collect();
-
-                let fn_decl = match self.env.get(ident.get_str_ident(), &expr) {
-                    Some(decl) => decl,
-                    None => unimplemented!(),
+                let str_ident = ident.get_str_ident();
+                let mut function: Box<dyn Callable> = if let Some(value) = self.global.stack.get(str_ident) {
+                    value.clone().into()
+                } else {
+                    match self.env.get(ident.get_str_ident(), &expr) {
+                        Some(decl) => decl,
+                        None => unimplemented!(),
+                    }.into()
                 };
 
-                let mut function: Function = fn_decl.into();
                 function.call(self, params)
             }
         }
@@ -211,7 +218,7 @@ impl Visitor for Evaluator {
             StatementEnum::VarDeclaration { ident, expr } => {
                 let evaluated_expr = self.visit_expr(expr);
                 self.env
-                    .declare(ident.get_str_ident().to_owned(), evaluated_expr);
+                    .declare(ident.get_str_ident(), evaluated_expr);
             }
             StatementEnum::Block { stmts } => return self.execute_block(stmts),
             StatementEnum::FnDeclaration {
@@ -220,7 +227,7 @@ impl Visitor for Evaluator {
                 stmts,
             } => {
                 let env_id = self.env.nodes.len() - 1;
-                let value = StackType::Function {
+                let function = Function {
                     params: params
                         .iter()
                         .map(|param| param.get_str_ident().to_owned())
@@ -228,7 +235,7 @@ impl Visitor for Evaluator {
                     stmts,
                     env_id,
                 };
-                self.env.declare(ident.get_str_ident().to_owned(), value)
+                self.env.declare(ident.get_str_ident(), StackType::Function(Box::new(function)))
             }
             StatementEnum::Return { expr } => {
                 return Err(StatementErr::Return(self.visit_expr(expr)))

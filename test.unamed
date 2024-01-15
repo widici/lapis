@@ -11,4 +11,4 @@ fn fizz_buzz(x) {
     return x
 }
 
-var res = fizz_buzz(15)
+puts(fizz_buzz(15))

@@ -79,7 +79,7 @@ impl Not for Literal {
 
 macro_rules! impl_partial_eq {
     ($enum:ident, { $($variant:ident),* }) => {
-        impl PartialEq for Literal {
+        impl PartialEq for $enum {
             fn eq(&self, other: &Self) -> bool {
                 match (self, other) {
                     $(

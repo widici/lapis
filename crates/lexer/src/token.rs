@@ -84,6 +84,23 @@ pub enum Literal {
     Char(char),
 }
 
+macro_rules! impl_display {
+    ($enum:ident, { $($variant:ident),* }) => {
+        impl Display for $enum {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                match self {
+                    $(
+                        $enum::$variant(contents) => write!(f, "{}", contents)?,
+                    )*
+                }
+                Ok(())
+            }
+        }
+    };
+}
+
+impl_display!(Literal, { Int, Float, Bool, Str, Char });
+
 impl Literal {
     #[must_use]
     pub fn cmp_type(&self, other: &Self) -> bool {

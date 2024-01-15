@@ -83,6 +83,10 @@ impl Resolver {
     }
 
     fn update_side_table(&mut self, expr: Expression, ident: &String) {
+        // Handels exceptions where the ident doesn't need to be resolverd; native-fns
+        if ["puts"].contains(&ident.as_str()) {
+            return;
+        }
         for (distance, scope) in self.scopes.iter().rev().enumerate() {
             if !scope.contains(ident) {
                 continue;

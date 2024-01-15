@@ -1,19 +1,17 @@
-use ast::{ast::Statement, Expression};
+use ast::Expression;
 use lexer::token::Literal;
 use log::info;
-use std::collections::{
+use std::{collections::{
     hash_map::Entry::{Occupied, Vacant},
     HashMap,
-};
+}, fmt::Display};
+
+use crate::callable::Callable;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum StackType {
     Literal(Literal),
-    Function {
-        params: Vec<String>,
-        stmts: Vec<Statement>,
-        env_id: usize,
-    },
+    Function(Box<dyn Callable>),
     Undefined,
 }
 
@@ -54,7 +52,7 @@ impl Enviroment {
         info!("New node in Enviroment with env_id: {}", self.get_current_env_id())
     }
 
-    pub(crate) fn declare(&mut self, ident: String, value: StackType) {
+    pub(crate) fn declare(&mut self, ident: &str, value: StackType) {
         let env_id = self.get_current_env_id();
         if let Some(node) = self.nodes.get_mut(env_id) {
             node.declare(ident, value)
@@ -117,7 +115,7 @@ impl Enviroment {
 
 #[derive(Debug)]
 pub(crate) struct EnviromentNode {
-    stack: HashMap<String, StackType>,
+    pub(crate) stack: HashMap<String, StackType>,
 }
 
 impl EnviromentNode {
@@ -127,8 +125,8 @@ impl EnviromentNode {
         }
     }
 
-    pub(crate) fn declare(&mut self, ident: String, value: StackType) {
-        match self.stack.entry(ident.clone()) {
+    pub(crate) fn declare(&mut self, ident: &str, value: StackType) {
+        match self.stack.entry(ident.to_owned()) {
             Occupied(..) => unimplemented!(),
             Vacant(entry) => {
                 info!("Declared {} -> {:?}", ident, value);
@@ -156,5 +154,16 @@ impl StackType {
             (StackType::Undefined, StackType::Literal(..) | StackType::Undefined) => true,
             _ => false,
         }
+    }
+}
+
+impl Display for StackType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StackType::Function(function) => write!(f, "{:?}", function)?,
+            StackType::Undefined => write!(f, "undefined")?,
+            StackType::Literal(literal) => write!(f, "{}", literal)?,
+        }
+        Ok(())
     }
 }

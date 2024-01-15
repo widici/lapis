@@ -1,4 +1,4 @@
-use crate::callable::{Callable, Function, Puts};
+use crate::callable::{Callable, Function, Puts, PutsLn};
 use crate::env::{Enviroment, StackType, EnviromentNode};
 use ast::Visitor;
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
@@ -24,6 +24,7 @@ impl Evaluator {
         env.new_node(); // Add global node
         let mut global = EnviromentNode::new();
         global.declare("puts", StackType::Function(Box::new(Puts {})));
+        global.declare("putsln", StackType::Function(Box::new(PutsLn {})));
         Evaluator {
             env,
             global,

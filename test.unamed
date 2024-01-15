@@ -11,4 +11,4 @@ fn fizz_buzz(x) {
     return x
 }
 
-puts(fizz_buzz(15))
+putsln(fizz_buzz(15))

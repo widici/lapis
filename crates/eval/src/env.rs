@@ -51,7 +51,7 @@ impl Enviroment {
             self.nodes.insert(env_id, node);
             self.env_ptr = Some(env_id)
         }
-        info!("New node in Enviroment: {:?}", self.nodes)
+        info!("New node in Enviroment with env_id: {}", self.get_current_env_id())
     }
 
     pub(crate) fn declare(&mut self, ident: String, value: StackType) {
@@ -59,7 +59,7 @@ impl Enviroment {
         if let Some(node) = self.nodes.get_mut(env_id) {
             node.declare(ident, value)
         }
-        info!("Declared in Enviroment: {:?}", self.nodes)
+        //info!("Declared in Enviroment: {:?}", self.nodes)
     }
 
     pub(crate) fn assign(
@@ -84,6 +84,7 @@ impl Enviroment {
         match self.env_ptr {
             Some(env_id) => {
                 self.nodes.remove(env_id);
+                self.env_ptr = Some(self.env_ptr.unwrap() - 1);
             }
             None => {
                 self.nodes.pop();
@@ -94,8 +95,10 @@ impl Enviroment {
     pub(crate) fn get(&mut self, ident: &String, expr: &Expression) -> Option<StackType> {
         let env_id = self.get_env_id(expr);
         let node = match self.nodes.get_mut(env_id) {
-            Some(node) => node,
-            None => unimplemented!(),
+            Some(node) => {
+                node
+            },
+            None => unimplemented!("Failed getting: {:?} {}", ident, env_id),
         };
         node.stack.get(ident).cloned()
     }
@@ -125,9 +128,10 @@ impl EnviromentNode {
     }
 
     pub(crate) fn declare(&mut self, ident: String, value: StackType) {
-        match self.stack.entry(ident) {
+        match self.stack.entry(ident.clone()) {
             Occupied(..) => unimplemented!(),
             Vacant(entry) => {
+                info!("Declared {} -> {:?}", ident, value);
                 entry.insert(value);
             }
         }
@@ -137,8 +141,8 @@ impl EnviromentNode {
         if !self.stack[&ident].cmp_type(&value) {
             return Err(());
         }
+        info!("Assigned {} -> {:?}", ident, value);
         self.stack.insert(ident, value);
-        info!("Stack: {:?}", self.stack);
         Ok(())
     }
 }

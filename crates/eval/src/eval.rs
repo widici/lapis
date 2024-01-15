@@ -2,7 +2,7 @@ use crate::callable::{Callable, Function};
 use crate::env::{Enviroment, StackType};
 use ast::Visitor;
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
-use error::ErrorKind::{InvalidOperands, MismatchedTypes, UnexpectedExpected};
+use error::ErrorKind::{InvalidOperands, MismatchedTypes, UnexpectedExpected, Unexpected};
 use error::{impl_error_handling, Error, ErrorLocation};
 use lexer::ops::Pow;
 use lexer::token::{
@@ -102,7 +102,12 @@ impl Visitor for Evaluator {
                     (lhs_st.clone(), rhs_st.clone())
                 {
                     let res = match op {
-                        Op::Add => lhs + rhs,
+                        Op::Add => match (lhs.clone(), rhs.clone()) {
+                            (Literal::Str(lhs), Literal::Str(rhs)) => {
+                                Some(Literal::Str(lhs + rhs.as_str()))
+                            }
+                            _ => lhs + rhs
+                        }
                         Op::Sub => lhs - rhs,
                         Op::Mul => lhs * rhs,
                         Op::Div => lhs / rhs,
@@ -116,7 +121,9 @@ impl Visitor for Evaluator {
                             Op::EqEq => lhs == rhs,
                             Op::Ne => lhs != rhs,
                             _ => {
-                                unreachable!("Found unexpected op")
+                                self.add_error(Unexpected { found: Box::new(operator) });
+                                self.report_errors();
+                                unreachable!()
                             }
                         })),
                     };

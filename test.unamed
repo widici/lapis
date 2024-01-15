@@ -1,2 +1,14 @@
-var x = 10
-var x = 20
+fn fizz_buzz(x) {
+    var result = ""
+
+    if x % 3 == 0 {
+        result += "Fizz "
+    }
+    if x % 5 == 0 {
+        result += "Buzz "
+    }
+
+    return x
+}
+
+var res = fizz_buzz(15)

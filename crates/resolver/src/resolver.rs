@@ -3,14 +3,16 @@ use ast::{ExpressionEnum, Visitor};
 use error::impl_error_handling;
 use error::{
     Error,
-    ErrorKind::{NotFound, Redefenition, StmtUnexpectedContext},
+    ErrorKind::{NotFound, Redeclaration, StmtUnexpectedContext},
     ErrorLocation,
 };
 use log::info;
+use span::GetSpanTrait;
 use std::collections::{
     hash_map::Entry::{Occupied, Vacant},
     HashMap,
 };
+use lexer::token::Token;
 
 pub struct Resolver {
     /// Scopes -> scope -> idents
@@ -63,12 +65,13 @@ impl Resolver {
         info!("Removed scope: {:?}", self.scopes);
     }
 
-    fn declare(&mut self, ident: String) {
+    fn declare(&mut self, ident: Token) {
+        let str_ident = ident.get_str_ident().to_owned();
         if let Some(scope) = self.scopes.last_mut() {
-            if scope.contains(&ident) {
-                self.add_error(Redefenition { ident })
+            if scope.contains(&str_ident) {
+                self.add_error(Redeclaration { found: str_ident, span: ident.get_span() })
             } else {
-                scope.push(ident)
+                scope.push(str_ident)
             }
         } else {
             unreachable!("Failed to find scope in resolver")
@@ -148,11 +151,11 @@ impl Visitor for Resolver {
                 ident,
                 params,
             } => {
-                self.declare(ident.get_str_ident().to_owned());
+                self.declare(ident);
                 self.fn_type = FnType::Fn;
                 self.new_scope();
                 for param in params {
-                    self.declare(param.get_str_ident().to_owned());
+                    self.declare(param);
                 }
                 for stmt in stmts {
                     self.visit_stmt(stmt)
@@ -162,7 +165,7 @@ impl Visitor for Resolver {
             }
             StatementEnum::VarDeclaration { ident, expr } => {
                 self.visit_expr(expr);
-                self.declare(ident.get_str_ident().to_owned());
+                self.declare(ident);
             }
             StatementEnum::If {
                 if_branch,

@@ -62,26 +62,26 @@ impl Enviroment {
         info!("Declared in Enviroment: {:?}", self.nodes)
     }
 
-    pub(crate) fn assign(&mut self, ident: String, value: StackType, expr: &Expression) {
+    pub(crate) fn assign(&mut self, ident: String, value: StackType, expr: &Expression) -> Result<(), ()> {
         let env_id = self.get_env_id(expr);
         let node = match self.nodes.get_mut(env_id) {
             Some(node) => node,
             None => unimplemented!(),
         };
         if node.stack.contains_key(&ident) {
-            node.assign(ident, value);
-            return;
+            node.assign(ident, value)?;
+            return Ok(());
         }
         unimplemented!()
     }
 
     pub(crate) fn drop(&mut self) {
-        match self.env_ptr {
+        let _ = match self.env_ptr {
             Some(env_id) => {
-                let _ = self.nodes.remove(env_id);
+                self.nodes.remove(env_id);
             }
             None => {
-                let _ = self.nodes.pop();
+                self.nodes.pop();
             }
         };
     }
@@ -100,7 +100,6 @@ impl Enviroment {
             Some(distance) => {
                 //log!("Expected from {:?} @ {:?} @ pos {:?}", expr, distance, self.nodes.len() - 1);
                 let current_pos = self.env_ptr.unwrap_or(self.nodes.len() - 1);
-
                 current_pos - distance
             }
             None => unimplemented!(),
@@ -129,12 +128,13 @@ impl EnviromentNode {
         }
     }
 
-    pub(crate) fn assign(&mut self, ident: String, value: StackType) {
+    pub(crate) fn assign(&mut self, ident: String, value: StackType) -> Result<(), ()>{
         if !self.stack[&ident].cmp_type(&value) {
-            unimplemented!()
+            return Err(())
         }
         self.stack.insert(ident, value);
-        info!("Stack: {:?}", self.stack)
+        info!("Stack: {:?}", self.stack);
+        Ok(())
     }
 }
 
@@ -145,7 +145,7 @@ impl StackType {
                 self_lit.cmp_type(other_lit)
             }
             (StackType::Undefined, StackType::Literal(..) | StackType::Undefined) => true,
-            _ => unreachable!(),
+            _ => false,
         }
     }
 }

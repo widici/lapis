@@ -7,11 +7,15 @@ use parser::Parser;
 use resolver::Resolver;
 use std::fs::File;
 use std::io::Read;
+use span::file::set_file_path;
 
 fn main() {
     env_logger::init();
 
     let args = args::parse();
+
+    set_file_path(args.path.to_str().unwrap().to_owned());
+
     let mut file = match File::open(args.path) {
         Ok(file) => file,
         Err(_) => unimplemented!(),

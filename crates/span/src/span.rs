@@ -1,6 +1,7 @@
 use line_col::LineColLookup;
 use miette::{MietteSpanContents, SourceCode, SourceSpan};
 use std::{fmt::Debug, fs::read_to_string};
+use crate::file::get_file_path;
 
 pub trait GetSpanTrait {
     fn get_span(&self) -> Span;
@@ -48,7 +49,8 @@ impl Span {
 
     pub fn get_src(&mut self) {
         if self.source.is_none() {
-            self.source = Some(read_to_string("./test.unamed").unwrap())
+            let file_path = get_file_path();
+            self.source = Some(read_to_string(file_path).unwrap())
         }
     }
 }
@@ -71,8 +73,9 @@ impl SourceCode for Span {
     ) -> Result<Box<dyn miette::SpanContents<'a> + 'a>, miette::MietteError> {
         let span: SourceSpan = (self.clone()).into();
         let contents = self.source.as_ref().unwrap().read_span(&span, 1, 1)?;
+        let file_path = get_file_path();
         Ok(Box::new(MietteSpanContents::new_named(
-            "./test.unamed".to_string(),
+            file_path,
             contents.data(),
             *contents.span(),
             contents.line(),

@@ -99,8 +99,13 @@ pub enum ErrorKind {
         #[span]
         found: Box<dyn SerializedToken>,
     },
-    #[error("{} is already defined in the scope", ident)]
-    Redefenition { ident: String },
+    #[error("{} is already defined in the scope", found)]
+    Redeclaration {
+        found: String,
+        #[label]
+        #[span]
+        span: Span
+    },
     #[error("{} can't be found", ident)]
     NotFound {
         ident: String,
@@ -124,6 +129,12 @@ pub enum ErrorKind {
         rhs: Box<dyn SerializedToken>,
         #[span]
         span: Span,
+    },
+    #[error("Found mismatched types")]
+    MismatchedTypes {
+        #[label("Mismatched types used here")]
+        #[span]
+        serialized_tok: Box<dyn SerializedToken>
     }
 }
 

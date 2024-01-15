@@ -195,6 +195,7 @@ dependencies = [
  "log",
  "parser",
  "resolver",
+ "span",
 ]
 
 [[package]]
@@ -291,6 +292,12 @@ name = "is_ci"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "616cde7c720bb2bb5824a224687d8f77bfd38922027f01d825cd7453be5099fb"
+
+[[package]]
+name = "lazy_static"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "lexer"
@@ -494,6 +501,7 @@ checksum = "b7c388c1b5e93756d0c740965c41e8822f866621d41acbdf6336a6a168f8840c"
 name = "span"
 version = "0.1.0"
 dependencies = [
+ "lazy_static",
  "line-col",
  "miette",
 ]

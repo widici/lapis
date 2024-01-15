@@ -8,7 +8,7 @@ use lexer::token::{
     Op, TokenType,
 };
 use error::{impl_error_handling, ErrorLocation, Error};
-use error::ErrorKind::{InvalidOperands, UnexpectedExpected};
+use error::ErrorKind::{InvalidOperands, UnexpectedExpected, MismatchedTypes};
 
 pub struct Evaluator {
     pub(crate) env: Enviroment,
@@ -153,8 +153,9 @@ impl Visitor for Evaluator {
             ExpressionEnum::Var { ident } => self.env.get(ident.get_str_ident(), &expr).unwrap(),
             ExpressionEnum::Assignment { ident, right } => {
                 let value = self.visit_expr(right);
-                self.env
-                    .assign(ident.get_str_ident().to_owned(), value.clone(), &expr);
+                if self.env.assign(ident.get_str_ident().to_owned(), value.clone(), &expr).is_err() {
+                    self.add_error(MismatchedTypes { serialized_tok: Box::new(expr) })
+                }
                 value
             }
             ExpressionEnum::Call { ident, params } => {

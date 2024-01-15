@@ -5,9 +5,9 @@ use eval::{env::Enviroment, eval::Evaluator};
 use lexer::Lexer;
 use parser::Parser;
 use resolver::Resolver;
+use span::file::set_file_path;
 use std::fs::File;
 use std::io::Read;
-use span::file::set_file_path;
 
 fn main() {
     env_logger::init();

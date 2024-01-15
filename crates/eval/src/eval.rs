@@ -2,17 +2,17 @@ use crate::callable::{Callable, Function};
 use crate::env::{Enviroment, StackType};
 use ast::Visitor;
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
+use error::ErrorKind::{InvalidOperands, MismatchedTypes, UnexpectedExpected};
+use error::{impl_error_handling, Error, ErrorLocation};
 use lexer::ops::Pow;
 use lexer::token::{
     Literal::{self, Bool},
     Op, TokenType,
 };
-use error::{impl_error_handling, ErrorLocation, Error};
-use error::ErrorKind::{InvalidOperands, UnexpectedExpected, MismatchedTypes};
 
 pub struct Evaluator {
     pub(crate) env: Enviroment,
-    errors: Vec<Error>
+    errors: Vec<Error>,
 }
 
 impl_error_handling!(Evaluator, ErrorLocation::Evaluator);
@@ -21,7 +21,10 @@ impl Evaluator {
     #[must_use]
     pub fn new(mut env: Enviroment) -> Self {
         env.new_node(); // Add global node
-        Evaluator { env, errors: Vec::new() }
+        Evaluator {
+            env,
+            errors: Vec::new(),
+        }
     }
 
     pub fn evaluate(&mut self, stmts: Vec<Statement>) -> Result<(), StatementErr> {
@@ -52,8 +55,11 @@ impl Evaluator {
                 }
             }
             _ => {
-                self.add_error(UnexpectedExpected { expected: "bool".to_string(), found: Box::new(condition) });
-            },
+                self.add_error(UnexpectedExpected {
+                    expected: "bool".to_string(),
+                    found: Box::new(condition),
+                });
+            }
         }
         None
     }
@@ -88,8 +94,13 @@ impl Visitor for Evaluator {
                     TokenType::Op(op) => op,
                     _ => unreachable!("Expected tt op"),
                 };
-                let (lhs_st, rhs_st) = (self.visit_expr(left.clone()), self.visit_expr(right.clone()));
-                if let (StackType::Literal(lhs), StackType::Literal(rhs)) = (lhs_st.clone(), rhs_st.clone()) {
+                let (lhs_st, rhs_st) = (
+                    self.visit_expr(left.clone()),
+                    self.visit_expr(right.clone()),
+                );
+                if let (StackType::Literal(lhs), StackType::Literal(rhs)) =
+                    (lhs_st.clone(), rhs_st.clone())
+                {
                     let res = match op {
                         Op::Add => lhs + rhs,
                         Op::Sub => lhs - rhs,
@@ -106,15 +117,15 @@ impl Visitor for Evaluator {
                             Op::Ne => lhs != rhs,
                             _ => {
                                 unreachable!("Found unexpected op")
-                            },
+                            }
                         })),
                     };
                     if res.is_none() {
                         let kind = InvalidOperands {
                             op: Box::new(operator),
-                            lhs: Box::new(left.clone()), 
-                            rhs: Box::new(right.clone()), 
-                            span: (left.span.start, right.span.end).into()
+                            lhs: Box::new(left.clone()),
+                            rhs: Box::new(right.clone()),
+                            span: (left.span.start, right.span.end).into(),
                         };
                         self.add_error(kind);
                         self.report_errors();
@@ -123,14 +134,18 @@ impl Visitor for Evaluator {
                     StackType::Literal(res.unwrap())
                 } else {
                     match lhs_st {
-                        StackType::Literal(..) => {},
-                        _ => {
-                            self.add_error(UnexpectedExpected { expected: "literal".to_owned(), found: Box::new(left) })
-                        }
+                        StackType::Literal(..) => {}
+                        _ => self.add_error(UnexpectedExpected {
+                            expected: "literal".to_owned(),
+                            found: Box::new(left),
+                        }),
                     }
                     match rhs_st {
                         StackType::Literal(..) => {}
-                        _ => self.add_error(UnexpectedExpected { expected: "literal".to_owned(), found: Box::new(right) })
+                        _ => self.add_error(UnexpectedExpected {
+                            expected: "literal".to_owned(),
+                            found: Box::new(right),
+                        }),
                     }
                     self.report_errors();
                     unreachable!()
@@ -153,8 +168,14 @@ impl Visitor for Evaluator {
             ExpressionEnum::Var { ident } => self.env.get(ident.get_str_ident(), &expr).unwrap(),
             ExpressionEnum::Assignment { ident, right } => {
                 let value = self.visit_expr(right);
-                if self.env.assign(ident.get_str_ident().to_owned(), value.clone(), &expr).is_err() {
-                    self.add_error(MismatchedTypes { serialized_tok: Box::new(expr) })
+                if self
+                    .env
+                    .assign(ident.get_str_ident().to_owned(), value.clone(), &expr)
+                    .is_err()
+                {
+                    self.add_error(MismatchedTypes {
+                        serialized_tok: Box::new(expr),
+                    })
                 }
                 value
             }

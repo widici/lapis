@@ -155,14 +155,13 @@ impl Lexer {
             self.advance();
         }
 
-        match int_str.contains('.') {
-            true => {
-                if int_str.ends_with('.') {
-                    int_str.push('0')
-                }
-                TokenType::Literal(Float(int_str.parse::<f64>().unwrap()))
+        if int_str.contains('.') {
+            if int_str.ends_with('.') {
+                int_str.push('0')
             }
-            false => TokenType::Literal(Int(int_str.parse::<i64>().unwrap())),
+            TokenType::Literal(Float(int_str.parse::<f64>().unwrap()))
+        } else {
+            TokenType::Literal(Int(int_str.parse::<i64>().unwrap()))
         }
     }
 

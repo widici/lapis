@@ -104,7 +104,7 @@ pub enum ErrorKind {
         found: String,
         #[label]
         #[span]
-        span: Span
+        span: Span,
     },
     #[error("{} can't be found", ident)]
     NotFound {
@@ -134,8 +134,8 @@ pub enum ErrorKind {
     MismatchedTypes {
         #[label("Mismatched types used here")]
         #[span]
-        serialized_tok: Box<dyn SerializedToken>
-    }
+        serialized_tok: Box<dyn SerializedToken>,
+    },
 }
 
 pub trait SerializedToken: Debug + Display + GetSpanTrait + Sync + Send + DynClone {}

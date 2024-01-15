@@ -155,9 +155,9 @@ impl Parser {
         self.advance(); // Consumes the var-kw
         let ident = self.parse_ident();
         if self.current_token.tt != TokenType::Op(Op::Eq) {
-            self.add_error(UnexpectedExpected { 
-                expected: format!("{:?}", Op::Eq), 
-                found: Box::new(self.current_token.clone())
+            self.add_error(UnexpectedExpected {
+                expected: format!("{:?}", Op::Eq),
+                found: Box::new(self.current_token.clone()),
             })
         }
         self.advance();
@@ -177,9 +177,9 @@ impl Parser {
                     let token = self.get_token();
                     self.advance(); // Consumes the eq
                     if self.current_token.tt != TokenType::Op(Op::Eq) {
-                        self.add_error(UnexpectedExpected { 
-                            expected: format!("{:?}", Op::Eq), 
-                            found: Box::new(self.current_token.clone())
+                        self.add_error(UnexpectedExpected {
+                            expected: format!("{:?}", Op::Eq),
+                            found: Box::new(self.current_token.clone()),
                         })
                     }
                     token
@@ -220,9 +220,9 @@ impl Parser {
 
     fn parse_block(&mut self) -> StatementEnum {
         if self.current_token.tt != TokenType::LCurly {
-            self.add_error(UnexpectedExpected { 
-                expected: format!("{:?}", TokenType::LCurly), 
-                found: Box::new(self.current_token.clone())
+            self.add_error(UnexpectedExpected {
+                expected: format!("{:?}", TokenType::LCurly),
+                found: Box::new(self.current_token.clone()),
             })
         }
         self.advance(); // Consumes the lcurly
@@ -235,9 +235,9 @@ impl Parser {
         self.advance(); // Consumes the fn-kw
         let ident = self.parse_ident();
         if self.current_token.tt != TokenType::LParen {
-            self.add_error(UnexpectedExpected { 
-                expected: format!("{:?}", TokenType::LParen), 
-                found: Box::new(self.current_token.clone())
+            self.add_error(UnexpectedExpected {
+                expected: format!("{:?}", TokenType::LParen),
+                found: Box::new(self.current_token.clone()),
             })
         }
         self.advance(); // Consumes the lparen
@@ -328,9 +328,9 @@ impl Parser {
         self.add_start(self.current_token.span.start);
         let ident = self.parse_ident();
         if self.current_token.tt != TokenType::LParen {
-            self.add_error(UnexpectedExpected { 
-                expected: format!("{:?}", TokenType::LParen), 
-                found: Box::new(self.current_token.clone())
+            self.add_error(UnexpectedExpected {
+                expected: format!("{:?}", TokenType::LParen),
+                found: Box::new(self.current_token.clone()),
             })
         }
         self.advance();
@@ -391,10 +391,12 @@ impl Parser {
                 }
             }
             _ => {
-                self.add_error(Unexpected { found: Box::new(self.current_token.clone()) });
+                self.add_error(Unexpected {
+                    found: Box::new(self.current_token.clone()),
+                });
                 self.report_errors();
                 unreachable!()
-            },
+            }
         }
     }
 
@@ -421,10 +423,10 @@ impl Parser {
                 Some(Ordering::Equal) => self.parse_equal(token_op, left),
                 Some(Ordering::Less) => {
                     let result = self.parse_equal(token_op, left);
-                    match is_inner {
-                        true => return result,
-                        false => result,
+                    if is_inner {
+                        return result;
                     }
+                    result
                 }
                 None => unimplemented!(),
             };

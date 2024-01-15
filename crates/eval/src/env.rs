@@ -62,7 +62,12 @@ impl Enviroment {
         info!("Declared in Enviroment: {:?}", self.nodes)
     }
 
-    pub(crate) fn assign(&mut self, ident: String, value: StackType, expr: &Expression) -> Result<(), ()> {
+    pub(crate) fn assign(
+        &mut self,
+        ident: String,
+        value: StackType,
+        expr: &Expression,
+    ) -> Result<(), ()> {
         let env_id = self.get_env_id(expr);
         let node = match self.nodes.get_mut(env_id) {
             Some(node) => node,
@@ -76,7 +81,7 @@ impl Enviroment {
     }
 
     pub(crate) fn drop(&mut self) {
-        let _ = match self.env_ptr {
+        match self.env_ptr {
             Some(env_id) => {
                 self.nodes.remove(env_id);
             }
@@ -128,9 +133,9 @@ impl EnviromentNode {
         }
     }
 
-    pub(crate) fn assign(&mut self, ident: String, value: StackType) -> Result<(), ()>{
+    pub(crate) fn assign(&mut self, ident: String, value: StackType) -> Result<(), ()> {
         if !self.stack[&ident].cmp_type(&value) {
-            return Err(())
+            return Err(());
         }
         self.stack.insert(ident, value);
         info!("Stack: {:?}", self.stack);

@@ -30,7 +30,6 @@ allow = [
 
     "clippy::option_if_let_else",
     "clippy::manual_let_else",
-    "clippy::match_bool",
     "clippy::single-match-else",
 
     "clippy::implicit_return",

@@ -1,7 +1,7 @@
+use crate::file::get_file_path;
 use line_col::LineColLookup;
 use miette::{MietteSpanContents, SourceCode, SourceSpan};
 use std::{fmt::Debug, fs::read_to_string};
-use crate::file::get_file_path;
 
 pub trait GetSpanTrait {
     fn get_span(&self) -> Span;
@@ -99,6 +99,8 @@ impl From<(usize, usize)> for Span {
 
 impl From<Span> for SourceSpan {
     fn from(value: Span) -> Self {
+        // This is needed as SourceSpan: From<RangeInclusive<usize>> isn't impl
+        #[allow(clippy::range_plus_one)]
         (value.start..value.end + 1).into()
     }
 }

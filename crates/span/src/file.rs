@@ -11,15 +11,16 @@ pub fn set_file_path(path: String) {
 }
 
 pub(crate) fn get_file_path() -> String {
-    return match FILE_PATH.lock().unwrap().clone() {
+    let option_fp = FILE_PATH.lock().unwrap().clone();
+    return match option_fp {
         Some(fp) => fp,
-        None => unreachable!("FILE_PATH not initialized")
-    }
+        None => unreachable!("FILE_PATH not initialized"),
+    };
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::file::{set_file_path, get_file_path};
+    use crate::file::{get_file_path, set_file_path};
 
     #[test]
     fn file_path_test() {

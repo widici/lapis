@@ -44,7 +44,9 @@ impl Pow for Literal {
     fn pow(self, rhs: Self) -> Self::Output {
         Some(match (self, rhs) {
             (Self::Int(lhs), Self::Int(rhs)) => Self::Int(lhs.pow(u32::try_from(rhs).unwrap())),
+            #[allow(clippy::cast_precision_loss)]
             (Self::Float(lhs), Self::Int(rhs)) => Self::Float(lhs.powf(rhs as f64)),
+            #[allow(clippy::cast_precision_loss)]
             (Self::Int(lhs), Self::Float(rhs)) => Self::Float((lhs as f64).powf(rhs)),
             (Self::Float(lhs), Self::Float(rhs)) => Self::Float(lhs.powf(rhs)),
             _ => return None,

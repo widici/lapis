@@ -4,11 +4,11 @@ pub(crate) mod puts;
 pub(crate) use function::Function;
 pub(crate) use puts::{Puts, PutsLn};
 
-use std::fmt::Debug;
 use crate::env::StackType;
 use crate::eval::Evaluator;
-use dyn_clone::{DynClone, clone_trait_object};
+use dyn_clone::{clone_trait_object, DynClone};
 use dyn_partial_eq::dyn_partial_eq;
+use std::fmt::Debug;
 
 #[dyn_partial_eq]
 pub trait Callable: DynClone + Debug {
@@ -21,12 +21,11 @@ pub trait Callable: DynClone + Debug {
 
 clone_trait_object!(Callable);
 
-
 impl From<StackType> for Box<dyn Callable> {
     fn from(value: StackType) -> Self {
         match value {
             StackType::Function(fn_decl) => fn_decl,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 }

@@ -1,20 +1,20 @@
-use std::fmt::Debug;
-use crate::eval::Evaluator;
-use crate::env::StackType;
-use dyn_partial_eq::DynPartialEq;
 use super::Callable;
+use crate::env::StackType;
+use crate::eval::Evaluator;
+use dyn_partial_eq::DynPartialEq;
+use std::fmt::Debug;
 
-#[derive(Clone, PartialEq, DynPartialEq)]
-pub(crate) struct Puts {}
+#[derive(Clone, PartialEq, Eq, DynPartialEq)]
+pub struct Puts {}
 
 impl Callable for Puts {
     fn arity(&self) -> usize {
         1
     }
 
-    fn call(&mut self, _evaluator: &mut Evaluator, params:Vec<StackType>) -> StackType {
+    fn call(&mut self, _evaluator: &mut Evaluator, params: Vec<StackType>) -> StackType {
         print!("{}", params[0]);
-        return StackType::Undefined
+        return StackType::Undefined;
     }
 }
 
@@ -25,17 +25,17 @@ impl Debug for Puts {
     }
 }
 
-#[derive(Clone, PartialEq, DynPartialEq)]
-pub(crate) struct PutsLn {}
+#[derive(Clone, PartialEq, Eq, DynPartialEq)]
+pub struct PutsLn {}
 
 impl Callable for PutsLn {
     fn arity(&self) -> usize {
         1
     }
 
-    fn call(&mut self, _evaluator: &mut Evaluator, params:Vec<StackType>) -> StackType {
+    fn call(&mut self, _evaluator: &mut Evaluator, params: Vec<StackType>) -> StackType {
         println!("{}", params[0]);
-        return StackType::Undefined
+        return StackType::Undefined;
     }
 }
 

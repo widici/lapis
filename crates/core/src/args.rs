@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use clap::Parser;
 
 #[derive(Parser)]
+#[clap(name = "lapis")]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
     /// File path to the file to run

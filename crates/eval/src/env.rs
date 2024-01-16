@@ -1,10 +1,13 @@
 use ast::Expression;
 use lexer::token::Literal;
 use log::info;
-use std::{collections::{
-    hash_map::Entry::{Occupied, Vacant},
-    HashMap,
-}, fmt::Display};
+use std::{
+    collections::{
+        hash_map::Entry::{Occupied, Vacant},
+        HashMap,
+    },
+    fmt::Display,
+};
 
 use crate::callable::Callable;
 
@@ -49,7 +52,10 @@ impl Enviroment {
             self.nodes.insert(env_id, node);
             self.env_ptr = Some(env_id)
         }
-        info!("New node in Enviroment with env_id: {}", self.get_current_env_id())
+        info!(
+            "New node in Enviroment with env_id: {}",
+            self.get_current_env_id()
+        )
     }
 
     pub(crate) fn declare(&mut self, ident: &str, value: StackType) {
@@ -93,9 +99,7 @@ impl Enviroment {
     pub(crate) fn get(&mut self, ident: &String, expr: &Expression) -> Option<StackType> {
         let env_id = self.get_env_id(expr);
         let node = match self.nodes.get_mut(env_id) {
-            Some(node) => {
-                node
-            },
+            Some(node) => node,
             None => unimplemented!("Failed getting: {:?} {}", ident, env_id),
         };
         node.stack.get(ident).cloned()

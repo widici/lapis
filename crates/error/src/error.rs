@@ -41,13 +41,7 @@ impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut title = format!("{:?} error occurred", self.location);
         if let Some(span) = self.span.as_ref() {
-            let lc = span.line_col.unwrap();
-            let pos = if lc.0 == lc.1 {
-                format!("{}:{}", lc.0 .0, lc.0 .1)
-            } else {
-                format!("{}:{}-{}:{}", lc.0 .0, lc.0 .1, lc.1 .0, lc.1 .1)
-            };
-            title += format!(" @ {}", pos).as_str()
+            title += format!(" @ {}", span).as_str()
         };
         writeln!(f, "{}:", title)?;
         write!(f, "{:?}", self.clone().to_report())?;
@@ -67,6 +61,16 @@ pub enum ErrorLocation {
 
 #[derive(Diagnostic, Error, Debug, Clone, GetSpan)]
 pub enum ErrorKind {
+    #[error("Failed to open file with path: {}, message: {}", path, msg)]
+    FileNotFound {
+        path: String,
+        msg: String
+    },
+    #[error("Failed to read from file with path: {}, message: {}", path, msg)]
+    FileNotRead {
+        path: String,
+        msg: String
+    },
     #[error("Found unexpected: {}, expected: {}", found, expected)]
     UnexpectedExpected {
         expected: String,

@@ -1,12 +1,12 @@
-use std::fmt::Debug;
+use super::Callable;
 use crate::env::StackType;
 use crate::eval::{Evaluator, StatementErr};
 use ast::Statement;
 use dyn_partial_eq::DynPartialEq;
-use super::Callable;
+use std::fmt::Debug;
 
 #[derive(Clone, PartialEq, DynPartialEq)]
-pub(crate) struct Function {
+pub struct Function {
     pub params: Vec<String>,
     pub stmts: Vec<Statement>,
     pub(crate) env_id: usize,

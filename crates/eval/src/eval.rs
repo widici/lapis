@@ -1,8 +1,8 @@
 use crate::callable::{Callable, Function, Puts, PutsLn};
-use crate::env::{Enviroment, StackType, EnviromentNode};
+use crate::env::{Enviroment, EnviromentNode, StackType};
 use ast::Visitor;
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
-use error::ErrorKind::{InvalidOperands, MismatchedTypes, UnexpectedExpected, Unexpected};
+use error::ErrorKind::{InvalidOperands, MismatchedTypes, Unexpected, UnexpectedExpected};
 use error::{impl_error_handling, Error, ErrorLocation};
 use lexer::ops::Pow;
 use lexer::token::{
@@ -81,6 +81,7 @@ impl Visitor for Evaluator {
     type E = StackType;
     type S = Result<(), StatementErr>;
 
+    #[allow(clippy::too_many_lines)]
     fn visit_expr(&mut self, expr: Expression) -> Self::E {
         match *expr.expr_enum.clone() {
             ExpressionEnum::Literal(token) => {
@@ -111,8 +112,8 @@ impl Visitor for Evaluator {
                             (Literal::Str(lhs), Literal::Str(rhs)) => {
                                 Some(Literal::Str(lhs + rhs.as_str()))
                             }
-                            _ => lhs + rhs
-                        }
+                            _ => lhs + rhs,
+                        },
                         Op::Sub => lhs - rhs,
                         Op::Mul => lhs * rhs,
                         Op::Div => lhs / rhs,
@@ -126,7 +127,9 @@ impl Visitor for Evaluator {
                             Op::EqEq => lhs == rhs,
                             Op::Ne => lhs != rhs,
                             _ => {
-                                self.add_error(Unexpected { found: Box::new(operator) });
+                                self.add_error(Unexpected {
+                                    found: Box::new(operator),
+                                });
                                 self.report_errors();
                                 unreachable!()
                             }
@@ -197,14 +200,16 @@ impl Visitor for Evaluator {
                     .map(|param| self.visit_expr(param))
                     .collect();
                 let str_ident = ident.get_str_ident();
-                let mut function: Box<dyn Callable> = if let Some(value) = self.global.stack.get(str_ident) {
-                    value.clone().into()
-                } else {
-                    match self.env.get(ident.get_str_ident(), &expr) {
-                        Some(decl) => decl,
-                        None => unimplemented!(),
-                    }.into()
-                };
+                let mut function: Box<dyn Callable> =
+                    if let Some(value) = self.global.stack.get(str_ident) {
+                        value.clone().into()
+                    } else {
+                        match self.env.get(ident.get_str_ident(), &expr) {
+                            Some(decl) => decl,
+                            None => unimplemented!(),
+                        }
+                        .into()
+                    };
 
                 function.call(self, params)
             }
@@ -218,8 +223,7 @@ impl Visitor for Evaluator {
             }
             StatementEnum::VarDeclaration { ident, expr } => {
                 let evaluated_expr = self.visit_expr(expr);
-                self.env
-                    .declare(ident.get_str_ident(), evaluated_expr);
+                self.env.declare(ident.get_str_ident(), evaluated_expr);
             }
             StatementEnum::Block { stmts } => return self.execute_block(stmts),
             StatementEnum::FnDeclaration {
@@ -236,7 +240,10 @@ impl Visitor for Evaluator {
                     stmts,
                     env_id,
                 };
-                self.env.declare(ident.get_str_ident(), StackType::Function(Box::new(function)))
+                self.env.declare(
+                    ident.get_str_ident(),
+                    StackType::Function(Box::new(function)),
+                )
             }
             StatementEnum::Return { expr } => {
                 return Err(StatementErr::Return(self.visit_expr(expr)))

@@ -8,24 +8,13 @@ use resolver::Resolver;
 use span::file::set_file_path;
 use std::fs::File;
 use std::io::Read;
+use error::{Error, impl_error_handling, ErrorLocation, ErrorKind::{FileNotFound, FileNotRead}};
 
 fn main() {
     env_logger::init();
 
-    let args = args::parse();
-
-    set_file_path(args.path.to_str().unwrap().to_owned());
-
-    let mut file = match File::open(args.path) {
-        Ok(file) => file,
-        Err(_) => unimplemented!(),
-    };
-
-    let mut contents = String::new();
-    if file.read_to_string(&mut contents).is_err() {
-        unimplemented!()
-    }
-    let chars: Vec<char> = contents.chars().collect();
+    let mut file_reader = FileReader { errors: Vec::new() };
+    let chars =  file_reader.read_from_file();
 
     let mut lexer = Lexer::new(chars);
     let tokens = lexer.get_tokens();
@@ -44,26 +33,34 @@ fn main() {
     let _ = evaluator.evaluate(stmts);
 }
 
-/*
-fn repl() {
-    let resolver = Resolver::new();
-    let env = Enviroment::new();
-    let mut evaluator = Evaluator::new(resolver, env);
-    loop {
-        print!(">> ");
-        let mut input: String = String::new();
-        std::io::stdout().flush().expect("Failed to flush output!");
-        std::io::stdin().read_line(&mut input).expect("Failed to read line!");
-        let input = input.trim_end();
+struct FileReader {
+    errors: Vec<Error>
+}
 
-        let mut lexer = Lexer::new(input.chars().collect());
-        let tokens = lexer.get_tokens();
-        info!("Lexed: {:?}", tokens);
-        let mut parser = Parser::new(tokens);
-        let stmts = parser.parse();
-        info!("Parsed: {:?}", stmts);
+impl_error_handling!(FileReader, ErrorLocation::Initial);
 
-        let _ = evaluator.evaluate(stmts);
+impl FileReader {
+    pub(crate) fn read_from_file(&mut self) -> Vec<char> {
+        let args = args::parse();
+        let path = args.path.to_str().unwrap().to_owned();
+
+        set_file_path(path.clone());
+
+        let mut file = match File::open(args.path) {
+            Ok(file) => file,
+            Err(e) => {
+                self.add_error(FileNotFound { path, msg: e.to_string() });
+                self.report_errors();
+                unreachable!()
+            },
+        };
+
+        let mut contents = String::new();
+        if let Err(e) = file.read_to_string(&mut contents) {
+            self.add_error(FileNotRead { path, msg: e.to_string() });
+            self.report_errors();
+            unreachable!()
+        }
+        contents.chars().collect()
     }
 }
-*/

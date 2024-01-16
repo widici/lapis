@@ -190,6 +190,7 @@ dependencies = [
  "cargo-husky",
  "clap",
  "env_logger",
+ "error",
  "eval",
  "lexer",
  "log",

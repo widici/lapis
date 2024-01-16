@@ -62,15 +62,9 @@ pub enum ErrorLocation {
 #[derive(Diagnostic, Error, Debug, Clone, GetSpan)]
 pub enum ErrorKind {
     #[error("Failed to open file with path: {}, message: {}", path, msg)]
-    FileNotFound {
-        path: String,
-        msg: String
-    },
+    FileNotFound { path: String, msg: String },
     #[error("Failed to read from file with path: {}, message: {}", path, msg)]
-    FileNotRead {
-        path: String,
-        msg: String
-    },
+    FileNotRead { path: String, msg: String },
     #[error("Found unexpected: {}, expected: {}", found, expected)]
     UnexpectedExpected {
         expected: String,

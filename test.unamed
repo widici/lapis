@@ -1,1 +1,1 @@
-puts("Hello world! :D")
+puts(1 + 1)

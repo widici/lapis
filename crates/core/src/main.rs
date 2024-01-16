@@ -1,6 +1,11 @@
 #[macro_use]
 extern crate log;
 mod args;
+use error::{
+    impl_error_handling, Error,
+    ErrorKind::{FileNotFound, FileNotRead},
+    ErrorLocation,
+};
 use eval::{env::Enviroment, eval::Evaluator};
 use lexer::Lexer;
 use parser::Parser;
@@ -8,13 +13,12 @@ use resolver::Resolver;
 use span::file::set_file_path;
 use std::fs::File;
 use std::io::Read;
-use error::{Error, impl_error_handling, ErrorLocation, ErrorKind::{FileNotFound, FileNotRead}};
 
 fn main() {
     env_logger::init();
 
     let mut file_reader = FileReader { errors: Vec::new() };
-    let chars =  file_reader.read_from_file();
+    let chars = file_reader.read_from_file();
 
     let mut lexer = Lexer::new(chars);
     let tokens = lexer.get_tokens();
@@ -34,7 +38,7 @@ fn main() {
 }
 
 struct FileReader {
-    errors: Vec<Error>
+    errors: Vec<Error>,
 }
 
 impl_error_handling!(FileReader, ErrorLocation::Initial);
@@ -49,15 +53,21 @@ impl FileReader {
         let mut file = match File::open(args.path) {
             Ok(file) => file,
             Err(e) => {
-                self.add_error(FileNotFound { path, msg: e.to_string() });
+                self.add_error(FileNotFound {
+                    path,
+                    msg: e.to_string(),
+                });
                 self.report_errors();
                 unreachable!()
-            },
+            }
         };
 
         let mut contents = String::new();
         if let Err(e) = file.read_to_string(&mut contents) {
-            self.add_error(FileNotRead { path, msg: e.to_string() });
+            self.add_error(FileNotRead {
+                path,
+                msg: e.to_string(),
+            });
             self.report_errors();
             unreachable!()
         }

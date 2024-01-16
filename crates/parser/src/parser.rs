@@ -68,11 +68,11 @@ impl Parser {
             TokenType::Var => self.parse_var_decl(),
             TokenType::LCurly => self.parse_block(),
             TokenType::Ident(_) => {
-                if self.peek_next_op().is_some() {
-                    self.parse_var_assign()
-                } else if let Some(token) = self.peek_token() {
+                if let Some(token) = self.peek_token() {
                     if token.tt == TokenType::LParen {
                         StatementEnum::Expression(self.parse_call())
+                    } else if self.peek_next_op().is_some() {
+                        self.parse_var_assign()
                     } else {
                         self.add_error(UnexpectedExpected {
                             expected: format!("{:?}", TokenType::LParen),
@@ -381,8 +381,7 @@ impl Parser {
                 if let Some(Token {
                     tt: TokenType::LParen,
                     ..
-                }) = self.peek_token()
-                {
+                }) = self.peek_token() {
                     self.parse_call()
                 } else {
                     let ident = self.get_token();

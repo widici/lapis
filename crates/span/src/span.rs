@@ -1,7 +1,10 @@
 use crate::file::get_file_path;
 use line_col::LineColLookup;
 use miette::{MietteSpanContents, SourceCode, SourceSpan};
-use std::{fmt::{Debug, Display}, fs::read_to_string};
+use std::{
+    fmt::{Debug, Display},
+    fs::read_to_string,
+};
 
 pub trait GetSpanTrait {
     fn get_span(&self) -> Span;
@@ -115,9 +118,9 @@ impl Display for Span {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let lc = self.line_col.unwrap();
         if lc.0 == lc.1 {
-            write!(f, "{}:{}", lc.0.0, lc.0.1)?
+            write!(f, "{}:{}", lc.0 .0, lc.0 .1)?
         } else {
-            write!(f, "{}:{}-{}:{}", lc.0.0, lc.0.1, lc.1.0, lc.1.1)?
+            write!(f, "{}:{}-{}:{}", lc.0 .0, lc.0 .1, lc.1 .0, lc.1 .1)?
         };
         Ok(())
     }

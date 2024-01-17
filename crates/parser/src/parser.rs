@@ -381,7 +381,8 @@ impl Parser {
                 if let Some(Token {
                     tt: TokenType::LParen,
                     ..
-                }) = self.peek_token() {
+                }) = self.peek_token()
+                {
                     self.parse_call()
                 } else {
                     let ident = self.get_token();

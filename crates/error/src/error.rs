@@ -140,8 +140,8 @@ pub enum ErrorKind {
         found_arity: usize,
         #[label("Function called here")]
         #[span]
-        called: Box<dyn SerializedToken>
-    }
+        called: Box<dyn SerializedToken>,
+    },
 }
 
 pub trait SerializedToken: Debug + Display + GetSpanTrait + Sync + Send + DynClone {}

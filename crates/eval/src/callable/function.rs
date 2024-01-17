@@ -1,4 +1,4 @@
-use super::{Callable, CallError};
+use super::{CallError, Callable};
 use crate::env::StackType;
 use crate::eval::{Evaluator, StatementErr};
 use ast::Statement;
@@ -17,13 +17,12 @@ impl Callable for Function {
         self.params.len()
     }
 
-    fn call(&mut self, evaluator: &mut Evaluator, params: Vec<StackType>) -> Result<StackType, CallError> {
-        if self.arity() != params.len() {
-            return Err(CallError::MismatchedArity {
-                found: params.len(), 
-                expected: self.arity()
-            })
-        }
+    fn call(
+        &mut self,
+        evaluator: &mut Evaluator,
+        params: Vec<StackType>,
+    ) -> Result<StackType, CallError> {
+        self.check_arity(params.len())?;
 
         evaluator.env.env_ptr = Some(self.env_id);
         evaluator.env.new_node(); // Begining of execution of fn stmts

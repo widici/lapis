@@ -1,8 +1,10 @@
-use crate::callable::{Callable, Function, Puts, PutsLn, CallError};
+use crate::callable::{CallError, Callable, Function, Puts, PutsLn};
 use crate::env::{Enviroment, EnviromentNode, StackType};
 use ast::Visitor;
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
-use error::ErrorKind::{InvalidOperands, MismatchedTypes, Unexpected, UnexpectedExpected, MismatchedArity};
+use error::ErrorKind::{
+    InvalidOperands, MismatchedArity, MismatchedTypes, Unexpected, UnexpectedExpected,
+};
 use error::{impl_error_handling, Error, ErrorLocation};
 use lexer::ops::Pow;
 use lexer::token::{
@@ -216,14 +218,14 @@ impl Visitor for Evaluator {
                     Err(call_err) => match call_err {
                         CallError::MismatchedArity { found, expected } => {
                             self.add_error(MismatchedArity {
-                                expected_arity: expected, 
+                                expected_arity: expected,
                                 found_arity: found,
-                                called: Box::new(expr) 
+                                called: Box::new(expr),
                             });
                             self.report_errors();
                             unreachable!()
                         }
-                    }
+                    },
                 }
             }
         }

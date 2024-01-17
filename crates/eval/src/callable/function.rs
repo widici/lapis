@@ -1,4 +1,4 @@
-use super::Callable;
+use super::{Callable, CallError};
 use crate::env::StackType;
 use crate::eval::{Evaluator, StatementErr};
 use ast::Statement;
@@ -17,9 +17,12 @@ impl Callable for Function {
         self.params.len()
     }
 
-    fn call(&mut self, evaluator: &mut Evaluator, params: Vec<StackType>) -> StackType {
+    fn call(&mut self, evaluator: &mut Evaluator, params: Vec<StackType>) -> Result<StackType, CallError> {
         if self.arity() != params.len() {
-            unimplemented!()
+            return Err(CallError::MismatchedArity {
+                found: params.len(), 
+                expected: self.arity()
+            })
         }
 
         evaluator.env.env_ptr = Some(self.env_id);
@@ -33,13 +36,13 @@ impl Callable for Function {
         evaluator.env.drop(); // End of execution of fn stmts
         evaluator.env.env_ptr = None;
 
-        match fn_return {
+        Ok(match fn_return {
             Ok(()) => StackType::Undefined,
             Err(e) => match e {
                 StatementErr::Return(stack_type) => stack_type,
                 _ => unreachable!(),
             },
-        }
+        })
     }
 
     fn get_env_id(&self) -> Option<usize> {

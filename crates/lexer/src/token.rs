@@ -31,8 +31,7 @@ impl SerializedToken for Token {}
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)?;
-        Ok(())
+        write!(f, "{:?}", self.tt)
     }
 }
 
@@ -47,7 +46,6 @@ impl From<Token> for Op {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
-    Illegal { pos: usize, char: char },
     EOF,
     Ident(String),
     Op(Op),
@@ -73,6 +71,18 @@ pub enum TokenType {
     // Curly braces
     LCurly,
     RCurly,
+}
+
+impl Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            TokenType::Literal(lit) => write!(f, "{}", lit)?,
+            TokenType::Op(op) => write!(f, "{:?}", op)?,
+            ident @ TokenType::Ident(_) => write!(f, "{:?}", ident)?,
+            tt => write!(f, "{:?}", tt)?,
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialOrd)]

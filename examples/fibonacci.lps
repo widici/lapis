@@ -1,0 +1,9 @@
+fn fibonacci(n, a, b) {
+    if n == 0 {
+        return a
+    }
+    putsln(a)
+    return fibonacci(n-1, b, a+b)
+}
+
+fibonacci(10)

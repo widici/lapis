@@ -1,4 +1,4 @@
-use super::Callable;
+use super::{Callable, CallError};
 use crate::env::StackType;
 use crate::eval::Evaluator;
 use dyn_partial_eq::DynPartialEq;
@@ -12,9 +12,9 @@ impl Callable for Puts {
         1
     }
 
-    fn call(&mut self, _evaluator: &mut Evaluator, params: Vec<StackType>) -> StackType {
+    fn call(&mut self, _evaluator: &mut Evaluator, params: Vec<StackType>) -> Result<StackType, CallError> {
         print!("{}", params[0]);
-        return StackType::Undefined;
+        return Ok(StackType::Undefined)
     }
 }
 
@@ -33,9 +33,9 @@ impl Callable for PutsLn {
         1
     }
 
-    fn call(&mut self, _evaluator: &mut Evaluator, params: Vec<StackType>) -> StackType {
+    fn call(&mut self, _evaluator: &mut Evaluator, params: Vec<StackType>) -> Result<StackType, CallError> {
         println!("{}", params[0]);
-        return StackType::Undefined;
+        return Ok(StackType::Undefined);
     }
 }
 

@@ -75,7 +75,7 @@ impl Parser {
                         self.parse_var_assign()
                     } else {
                         self.add_error(UnexpectedExpected {
-                            expected: format!("{:?}", TokenType::LParen),
+                            expected: format!("{}", TokenType::LParen),
                             found: Box::new(token),
                         });
                         self.report_errors();
@@ -156,7 +156,7 @@ impl Parser {
         let ident = self.parse_ident();
         if self.current_token.tt != TokenType::Op(Op::Eq) {
             self.add_error(UnexpectedExpected {
-                expected: format!("{:?}", Op::Eq),
+                expected: format!("{:?}", TokenType::Op(Op::Eq)),
                 found: Box::new(self.current_token.clone()),
             })
         }
@@ -178,7 +178,7 @@ impl Parser {
                     self.advance(); // Consumes the eq
                     if self.current_token.tt != TokenType::Op(Op::Eq) {
                         self.add_error(UnexpectedExpected {
-                            expected: format!("{:?}", Op::Eq),
+                            expected: format!("{:?}", TokenType::Op(Op::Eq)),
                             found: Box::new(self.current_token.clone()),
                         })
                     }
@@ -221,7 +221,7 @@ impl Parser {
     fn parse_block(&mut self) -> StatementEnum {
         if self.current_token.tt != TokenType::LCurly {
             self.add_error(UnexpectedExpected {
-                expected: format!("{:?}", TokenType::LCurly),
+                expected: format!("{}", TokenType::LCurly),
                 found: Box::new(self.current_token.clone()),
             })
         }
@@ -236,7 +236,7 @@ impl Parser {
         let ident = self.parse_ident();
         if self.current_token.tt != TokenType::LParen {
             self.add_error(UnexpectedExpected {
-                expected: format!("{:?}", TokenType::LParen),
+                expected: format!("{}", TokenType::LParen),
                 found: Box::new(self.current_token.clone()),
             })
         }
@@ -250,7 +250,7 @@ impl Parser {
                 TokenType::Comma => self.advance(),
                 TokenType::RParen => {}
                 _ => self.add_error(UnexpectedExpected {
-                    expected: format!("{:?} or {:?}", TokenType::Comma, TokenType::RParen),
+                    expected: format!("{} or {}", TokenType::Comma, TokenType::RParen),
                     found: Box::new(self.current_token.clone()),
                 }),
             }
@@ -329,7 +329,7 @@ impl Parser {
         let ident = self.parse_ident();
         if self.current_token.tt != TokenType::LParen {
             self.add_error(UnexpectedExpected {
-                expected: format!("{:?}", TokenType::LParen),
+                expected: format!("{}", TokenType::LParen),
                 found: Box::new(self.current_token.clone()),
             })
         }

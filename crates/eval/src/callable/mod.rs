@@ -13,7 +13,7 @@ use std::fmt::Debug;
 #[dyn_partial_eq]
 pub trait Callable: DynClone + Debug {
     fn arity(&self) -> usize;
-    fn call(&mut self, evaluator: &mut Evaluator, params: Vec<StackType>) -> StackType;
+    fn call(&mut self, evaluator: &mut Evaluator, params: Vec<StackType>) -> Result<StackType, CallError>;
     fn get_env_id(&self) -> Option<usize> {
         None
     }
@@ -27,5 +27,12 @@ impl From<StackType> for Box<dyn Callable> {
             StackType::Function(fn_decl) => fn_decl,
             _ => unreachable!(),
         }
+    }
+}
+
+pub enum CallError {
+    MismatchedArity {
+        found: usize,
+        expected: usize
     }
 }

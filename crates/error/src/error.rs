@@ -134,6 +134,14 @@ pub enum ErrorKind {
         #[span]
         serialized_tok: Box<dyn SerializedToken>,
     },
+    #[error("Expected arity: {} found arity: {}", expected_arity, found_arity)]
+    MismatchedArity {
+        expected_arity: usize,
+        found_arity: usize,
+        #[label("Function called here")]
+        #[span]
+        called: Box<dyn SerializedToken>
+    }
 }
 
 pub trait SerializedToken: Debug + Display + GetSpanTrait + Sync + Send + DynClone {}

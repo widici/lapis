@@ -6,4 +6,4 @@ fn fibonacci(n, a, b) {
     return fibonacci(n-1, b, a+b)
 }
 
-fibonacci(10, 0, 1)
+fibonacci(50, 0, 1)

@@ -6,4 +6,4 @@ fn factorial(n) {
     }
 }
 
-putsln(factorial(5))
+putsln(factorial(10))

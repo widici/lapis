@@ -184,22 +184,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 
 [[package]]
-name = "core"
-version = "0.1.0"
-dependencies = [
- "cargo-husky",
- "clap",
- "env_logger",
- "error",
- "eval",
- "lexer",
- "log",
- "parser",
- "resolver",
- "span",
-]
-
-[[package]]
 name = "dyn-clone"
 version = "1.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -314,6 +298,22 @@ name = "is_ci"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "616cde7c720bb2bb5824a224687d8f77bfd38922027f01d825cd7453be5099fb"
+
+[[package]]
+name = "lapis"
+version = "0.1.0"
+dependencies = [
+ "cargo-husky",
+ "clap",
+ "env_logger",
+ "error",
+ "eval",
+ "lexer",
+ "log",
+ "parser",
+ "resolver",
+ "span",
+]
 
 [[package]]
 name = "lazy_static"

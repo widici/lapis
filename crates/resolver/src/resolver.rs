@@ -83,7 +83,7 @@ impl Resolver {
     }
 
     fn update_side_table(&mut self, expr: Expression, ident: &String) {
-        // Handels exceptions where the ident doesn't need to be resolverd; native-fns
+        // Handels exceptions where the ident doesn't need to be resolved, native-fns
         if ["puts", "putsln"].contains(&ident.as_str()) {
             return;
         }

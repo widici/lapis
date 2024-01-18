@@ -6,6 +6,7 @@ Lapis is a treewalk-interpreted programming language written in rust with a rust
 
 1. [Examples](#examples)
 1. [Installation](#installation)
+1. [Usage](#usage)
 1. [License](#license)
 
 </details>

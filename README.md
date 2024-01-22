@@ -8,6 +8,7 @@ Lapis is a treewalk-interpreted programming language written in rust with a rust
 1. [Installation](#installation)
 1. [Usage](#usage)
 1. [License](#license)
+1. [Roadmap](#Roadmap)
 
 </details>
 
@@ -38,3 +39,10 @@ lapis --help
 ### License
 The lapis language is distrubuted with the MIT license.<br />
 See [LICENSE](LICENSE) for more details.
+
+### Roadmap
+- Static type checker
+- Transpiler w/ lua target
+- Basic OOP (structs)
+- Interfaces/mixins
+- Lua/C FFI

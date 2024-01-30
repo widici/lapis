@@ -2,14 +2,15 @@ use crate::token::Literal::{self, Bool, Char, Float, Int, Str};
 use crate::token::Op::{Add, And, Div, Eq, EqEq, Ge, Gt, Le, Lt, Mul, Ne, Not, Or, Pow, Rem, Sub};
 use crate::token::{Token, TokenType};
 use error::Error;
-use error::{impl_error_handling, ErrorKind::IllegalChar, ErrorKind::Unclosed, ErrorLocation};
+use error::{
+    impl_error_handling, report_errors, ErrorKind::IllegalChar, ErrorKind::Unclosed, ErrorLocation,
+};
 use span::Span;
 
 pub struct Lexer {
     input: Vec<char>,
     current_pos: usize,
     current_char: char,
-    errors: Vec<Error>,
 }
 
 impl_error_handling!(Lexer, ErrorLocation::Lexer);
@@ -21,7 +22,6 @@ impl Lexer {
             input,
             current_pos: 0,
             current_char: '\0',
-            errors: Vec::new(),
         };
         lexer.current_char = lexer.get_current_char();
         lexer
@@ -177,7 +177,7 @@ impl Lexer {
                     ty: "str",
                     start: start.into(),
                 });
-                self.report_errors();
+                report_errors();
             }
             self.advance();
         }
@@ -250,7 +250,6 @@ impl Lexer {
             self.advance()
         }
 
-        self.report_errors();
         tokens
     }
 }

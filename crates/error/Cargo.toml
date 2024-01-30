@@ -12,3 +12,4 @@ thiserror = "1.0.50"
 span = { path = "../span" }
 span-macros = { path = "../span/macros" }
 dyn-clone = "1.0.16"
+lazy_static = "1.4.0"

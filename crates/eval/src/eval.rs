@@ -5,7 +5,7 @@ use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
 use error::ErrorKind::{
     InvalidOperands, MismatchedArity, MismatchedTypes, Unexpected, UnexpectedExpected,
 };
-use error::{impl_error_handling, Error, ErrorLocation};
+use error::{impl_error_handling, report_errors, Error, ErrorLocation};
 use lexer::ops::Pow;
 use lexer::token::{
     Literal::{self, Bool},
@@ -15,7 +15,6 @@ use lexer::token::{
 pub struct Evaluator {
     pub(crate) env: Enviroment,
     global: EnviromentNode,
-    errors: Vec<Error>,
 }
 
 impl_error_handling!(Evaluator, ErrorLocation::Evaluator);
@@ -27,18 +26,13 @@ impl Evaluator {
         let mut global = EnviromentNode::new();
         global.declare("puts", StackType::Function(Box::new(Puts {})));
         global.declare("putsln", StackType::Function(Box::new(PutsLn {})));
-        Evaluator {
-            env,
-            global,
-            errors: Vec::new(),
-        }
+        Evaluator { env, global }
     }
 
     pub fn evaluate(&mut self, stmts: Vec<Statement>) -> Result<(), StatementErr> {
         for stmt in stmts {
             self.visit_stmt(stmt)?;
         }
-        self.report_errors();
         Ok(())
     }
 
@@ -132,7 +126,7 @@ impl Visitor for Evaluator {
                                 self.add_error(Unexpected {
                                     found: Box::new(operator),
                                 });
-                                self.report_errors();
+                                report_errors();
                                 unreachable!()
                             }
                         })),
@@ -145,7 +139,7 @@ impl Visitor for Evaluator {
                             span: (left.span.start, right.span.end).into(),
                         };
                         self.add_error(kind);
-                        self.report_errors();
+                        report_errors();
                         unreachable!()
                     }
                     StackType::Literal(res.unwrap())
@@ -164,7 +158,7 @@ impl Visitor for Evaluator {
                             found: Box::new(right),
                         }),
                     }
-                    self.report_errors();
+                    report_errors();
                     unreachable!()
                 }
             }
@@ -222,7 +216,7 @@ impl Visitor for Evaluator {
                                 found_arity: found,
                                 called: Box::new(expr),
                             });
-                            self.report_errors();
+                            report_errors();
                             unreachable!()
                         }
                     },

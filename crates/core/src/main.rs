@@ -2,7 +2,7 @@
 extern crate log;
 mod args;
 use error::{
-    impl_error_handling, Error,
+    impl_error_handling, report_errors, Error,
     ErrorKind::{FileNotFound, FileNotRead},
     ErrorLocation,
 };
@@ -17,7 +17,7 @@ use std::io::Read;
 fn main() {
     env_logger::init();
 
-    let mut file_reader = FileReader { errors: Vec::new() };
+    let mut file_reader = FileReader {};
     let chars = file_reader.read_from_file();
 
     let mut lexer = Lexer::new(chars);
@@ -35,11 +35,10 @@ fn main() {
     let mut evaluator = Evaluator::new(env);
 
     let _ = evaluator.evaluate(stmts);
+    report_errors();
 }
 
-struct FileReader {
-    errors: Vec<Error>,
-}
+struct FileReader {}
 
 impl_error_handling!(FileReader, ErrorLocation::Initial);
 
@@ -57,7 +56,7 @@ impl FileReader {
                     path,
                     msg: e.to_string(),
                 });
-                self.report_errors();
+                report_errors();
                 unreachable!()
             }
         };
@@ -68,7 +67,7 @@ impl FileReader {
                 path,
                 msg: e.to_string(),
             });
-            self.report_errors();
+            report_errors();
             unreachable!()
         }
         contents.chars().collect()

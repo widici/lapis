@@ -1,6 +1,6 @@
 use ast::{Expression, Statement, StatementEnum};
 use ast::{ExpressionEnum, Visitor};
-use error::impl_error_handling;
+use error::{impl_error_handling, report_errors};
 use error::{
     Error,
     ErrorKind::{NotFound, Redeclaration, StmtUnexpectedContext},
@@ -19,7 +19,6 @@ pub struct Resolver {
     scopes: Vec<Vec<String>>,
     /// Call/var/assign-expr -> distance
     side_table: HashMap<Expression, usize>,
-    errors: Vec<Error>,
     fn_type: FnType,
     in_loop: bool,
 }
@@ -34,7 +33,6 @@ impl Resolver {
         Resolver {
             scopes,
             side_table,
-            errors: Vec::new(),
             fn_type: FnType::None,
             in_loop: false,
         }
@@ -45,7 +43,6 @@ impl Resolver {
         self.new_scope();
         self.resolve_inner(stmts);
         self.end_scope();
-        self.report_errors();
         self.side_table
     }
 
@@ -104,7 +101,7 @@ impl Resolver {
             ident: ident.clone(),
             required: expr.span,
         });
-        self.report_errors()
+        report_errors()
     }
 
     fn resolve_cond_branch(&mut self, branch: (Expression, Statement)) {

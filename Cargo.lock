@@ -236,6 +236,7 @@ name = "error"
 version = "0.1.0"
 dependencies = [
  "dyn-clone",
+ "lazy_static",
  "line-col",
  "miette",
  "span",

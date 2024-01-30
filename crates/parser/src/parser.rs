@@ -1,6 +1,6 @@
 use ast::{Expression, ExpressionEnum, Statement, StatementEnum};
 use error::ErrorKind::{DuplicateParam, Unexpected, UnexpectedExpected};
-use error::{impl_error_handling, Error, ErrorLocation};
+use error::{impl_error_handling, report_errors, Error, ErrorLocation};
 use lexer::token::{Op, Token, TokenType};
 use span::Span;
 use std::cmp::Ordering;
@@ -11,7 +11,6 @@ pub struct Parser {
     current_token: Token,
     start_stack: Vec<usize>,
     current_expr_id: usize,
-    errors: Vec<Error>,
 }
 
 impl_error_handling!(Parser, ErrorLocation::Parser);
@@ -26,16 +25,13 @@ impl Parser {
             current_token,
             start_stack: Vec::new(),
             current_expr_id: 0,
-            errors: Vec::new(),
         };
         parser.current_token = parser.get_token();
         parser
     }
 
     pub fn parse(&mut self) -> Vec<Statement> {
-        let result = self.parse_inner(false);
-        self.report_errors();
-        result
+        self.parse_inner(false)
     }
 
     fn parse_inner(&mut self, is_inner: bool) -> Vec<Statement> {
@@ -78,7 +74,7 @@ impl Parser {
                             expected: format!("{}", TokenType::LParen),
                             found: Box::new(token),
                         });
-                        self.report_errors();
+                        report_errors();
                         unreachable!()
                     }
                 } else {
@@ -143,7 +139,7 @@ impl Parser {
                     expected: String::from("TokenType::Ident"),
                     found: Box::new(self.current_token.clone()),
                 });
-                self.report_errors();
+                report_errors();
                 unreachable!()
             }
         };
@@ -190,7 +186,7 @@ impl Parser {
                     expected: String::from("TokenType::Op"),
                     found: Box::new(self.current_token.clone()),
                 });
-                self.report_errors();
+                report_errors();
                 unreachable!()
             }
         };
@@ -263,7 +259,7 @@ impl Parser {
 
             params.push(ident)
         }
-        self.report_errors();
+        report_errors();
         self.advance(); // Consume the rparen
 
         self.add_start(self.current_token.span.start);
@@ -373,7 +369,7 @@ impl Parser {
                         expected: format!("{:?} or {:?}", Op::Sub, Op::Not),
                         found: Box::new(self.current_token.clone()),
                     });
-                    self.report_errors();
+                    report_errors();
                     unreachable!()
                 }
             },
@@ -394,7 +390,7 @@ impl Parser {
                 self.add_error(Unexpected {
                     found: Box::new(self.current_token.clone()),
                 });
-                self.report_errors();
+                report_errors();
                 unreachable!()
             }
         }

@@ -125,3 +125,9 @@ impl Display for Span {
         Ok(())
     }
 }
+
+impl Default for Span {
+    fn default() -> Self {
+        Self::new(0, 0)
+    }
+}

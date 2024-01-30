@@ -192,7 +192,7 @@ mod tests {
 
     #[test]
     fn get_span_test() {
-        let span = Span::new(0, 0);
+        let span = Span::default();
         let instance = Token::new(super::TokenType::EOF, span.clone());
         assert_eq!(span, instance.get_span())
     }

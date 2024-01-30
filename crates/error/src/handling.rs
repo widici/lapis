@@ -19,12 +19,12 @@ macro_rules! impl_error_handling {
 }
 
 pub fn report_errors() {
-    let errors = ERRORS.lock().unwrap();
+    let errors: Vec<Error> = ERRORS.lock().unwrap().clone();
     if errors.is_empty() {
         return;
     }
 
-    for error in errors.clone() {
+    for error in errors {
         eprint!("{}", error)
     }
     std::process::exit(1)

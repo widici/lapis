@@ -18,7 +18,7 @@ impl_error_handling!(Parser, ErrorLocation::Parser);
 impl Parser {
     #[must_use]
     pub fn new(tokens: Vec<Token>) -> Parser {
-        let current_token = Token::new(TokenType::EOF, Span::new(0, 0));
+        let current_token = Token::new(TokenType::EOF, Span::default());
         let mut parser = Parser {
             tokens,
             current_pos: 0,

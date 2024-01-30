@@ -313,7 +313,7 @@ mod tests {
                     expr: Expression {
                         id: 0,
                         expr_enum: Box::new(ExpressionEnum::Literal(Literal::Int(1))),
-                        span: Span::new(0, 0),
+                        span: Span::default(),
                     },
                 },
                 Err(StatementErr::Return(StackType::Literal(Literal::Int(1)))),
@@ -323,7 +323,7 @@ mod tests {
                 StatementEnum::Expression(Expression {
                     id: 0,
                     expr_enum: Box::new(ExpressionEnum::Literal(Literal::Int(1))),
-                    span: Span::new(0, 0),
+                    span: Span::default(),
                 }),
                 Ok(()),
             ),
@@ -332,7 +332,7 @@ mod tests {
         for case in test_cases {
             assert_eq!(
                 evaluator.visit_stmt(Statement {
-                    span: Span::new(0, 0),
+                    span: Span::default(),
                     stmt_enum: Box::new(case.0)
                 }),
                 case.1

@@ -222,24 +222,24 @@ mod tests {
             expr_enum: Box::new(ExpressionEnum::Var {
                 ident: Token {
                     tt: TokenType::Ident("x".to_string()),
-                    span: Span::new(0, 0),
+                    span: Span::default(),
                 },
             }),
-            span: Span::new(0, 0),
+            span: Span::default(),
         };
         let test_cases: Vec<Statement> = [
             StatementEnum::VarDeclaration {
                 ident: Token {
                     tt: TokenType::Ident("x".to_string()),
-                    span: Span::new(0, 0),
+                    span: Span::default(),
                 },
                 expr: Expression {
                     id: 0,
                     expr_enum: Box::new(ExpressionEnum::Literal(Token {
                         tt: TokenType::Literal(Literal::Int(0)),
-                        span: Span::new(0, 0),
+                        span: Span::default(),
                     })),
-                    span: Span::new(0, 0),
+                    span: Span::default(),
                 },
             },
             StatementEnum::Expression(var_expr.clone()),
@@ -247,7 +247,7 @@ mod tests {
         .into_iter()
         .map(|stmt_enum| Statement {
             stmt_enum: Box::new(stmt_enum),
-            span: Span::new(0, 0),
+            span: Span::default(),
         })
         .collect();
 
